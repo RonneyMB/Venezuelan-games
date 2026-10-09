@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafío: Capitales de Venezuela 🇻🇪</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        venezuela: {
+                            yellow: '#FFCC00',
+                            blue: '#00247D',
+                            red: '#CF142B',
+                            dark: '#0a0f1d'
+                        }
+                    },
+                    fontFamily: {
+                        outfit: ['Outfit', 'sans-serif'],
+                        body: ['Plus Jakarta Sans', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at top center, #1e293b 0%, #0f172a 60%, #080d1a 100%);
+            min-height: 100vh;
+            color: #f8fafc;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* SVG Map Highlights */
+        .state-path {
+            fill: #334155;
+            stroke: #64748b;
+            stroke-width: 1.2;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .state-path:hover {
+            fill: #475569;
+        }
+
+        .state-path.active {
+            fill: #f59e0b !important;
+            stroke: #fef08a !important;
+            stroke-width: 2.5;
+            filter: drop-shadow(0px 0px 10px rgba(245, 158, 11, 0.7));
+            animation: pulse-active 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-active {
+            0%, 100% { fill: #f59e0b; }
+            50% { fill: #fbbf24; }
+        }
+
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        .pop-success {
+            animation: popSuccess 0.5s ease-out;
+        }
+
+        @keyframes popSuccess {
+            0% { transform: scale(0.95); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        /* Admin Overlay Panel */
+        .admin-overlay {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            z-index: 50;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 2px solid rgba(245, 158, 11, 0.4);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 60px rgba(245, 158, 11, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 500px;
+        }
+
+        .admin-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(120%);
+        }
+
+        .admin-btn {
+            transition: all 0.2s ease;
+            font-weight: 900;
+        }
+
+        .admin-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .admin-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen text-slate-100 selection:bg-amber-400 selection:text-slate-900">
+
+    <header class="w-full glass-panel sticky top-0 z-40 border-b border-white/10 px-4 py-3">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <span class="text-3xl">🇻🇪</span>
+                <div>
+                    <h1 class="font-outfit font-black text-lg md:text-xl tracking-wide bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
+                        CAPITALES DE VENEZUELA
+                    </h1>
+                    <p class="text-xs text-amber-400/80 font-semibold hidden sm:block">Desafío Geográfico Interactivo</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button id="adminToggleBtn" onclick="toggleAdminMode()" class="p-2.5 rounded-xl glass-card hover:bg-slate-700/60 transition text-slate-400 border border-white/10 text-sm" title="Modo Administrador">
+                    🔒
+                </button>
+                <button id="soundToggleBtn" onclick="toggleSound()" class="p-2.5 rounded-xl glass-card hover:bg-slate-700/60 transition text-amber-300 border border-amber-400/30 text-sm">
+                    🔊
+                </button>
+                <button onclick="showStartScreen()" class="p-2.5 rounded-xl glass-card hover:bg-slate-700/60 transition text-slate-300 border border-white/10 text-xs font-bold">
+                    🏠 Inicio
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ADMIN OVERLAY PANEL -->
+    <div id="adminOverlay" class="admin-overlay hidden w-96 p-5 rounded-2xl">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl">🔐</span>
+                <div>
+                    <div class="text-xs text-amber-400/80 font-bold uppercase tracking-wider">Panel Admin</div>
+                </div>
+            </div>
+            <button onclick="toggleAdminMode()" class="text-slate-400 hover:text-white text-xl" title="Cerrar panel">✕</button>
+        </div>
+
+        <div class="space-y-3 mb-4">
+            <div class="glass-card p-3 rounded-xl">
+                <span class="text-xs text-slate-400 uppercase font-semibold block mb-1">Estado Actual</span>
+                <span id="adminStateName" class="text-white font-outfit font-bold text-lg">-</span>
+            </div>
+            
+            <div class="glass-card p-3 rounded-xl border-2 border-amber-400/40 bg-amber-400/5">
+                <span class="text-xs text-amber-400 uppercase font-semibold block mb-1">Capital Correcta</span>
+                <span id="adminCapitalName" class="text-amber-300 font-outfit font-black text-xl">-</span>
+            </div>
+        </div>
+
+        <div class="space-y-2">
+            <button onclick="markCorrect()" class="admin-btn w-full px-4 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-outfit font-black text-sm shadow-lg border-2 border-emerald-400 flex items-center justify-center gap-2">
+                <span class="text-lg">✓</span> Correcto
+            </button>
+            <button onclick="markIncorrect()" class="admin-btn w-full px-4 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-outfit font-black text-sm shadow-lg border-2 border-red-400 flex items-center justify-center gap-2">
+                <span class="text-lg">✗</span> Incorrecto
+            </button>
+            <button onclick="advanceState()" class="admin-btn w-full px-4 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:brightness-110 text-slate-950 font-outfit font-black text-sm shadow-lg border-2 border-amber-300 flex items-center justify-center gap-2">
+                <span class="text-lg">→</span> Avanzar
+            </button>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-white/10 text-xs text-slate-400">
+            <div class="flex items-center gap-2 mb-1">
+                <span>⌨️</span>
+                <span class="font-semibold">Atajos:</span>
+            </div>
+            <div class="flex gap-2 text-[10px]">
+                <kbd class="px-2 py-1 bg-slate-700 rounded">C</kbd> Correcto
+                <kbd class="px-2 py-1 bg-slate-700 rounded">I</kbd> Incorrecto
+                <kbd class="px-2 py-1 bg-slate-700 rounded">A</kbd> Avanzar
+            </div>
+        </div>
+    </div>
+
+    <main class="flex-grow max-w-6xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center items-center">
+
+        <!-- START SCREEN -->
+        <section id="startScreen" class="glass-panel rounded-3xl p-6 sm:p-10 text-center max-w-2xl w-full my-auto shadow-2xl relative overflow-hidden border border-amber-400/20">
+            <div class="text-6xl mb-4 animate-bounce">🗺️</div>
+            <h2 class="font-outfit text-3xl sm:text-5xl font-extrabold tracking-tight mb-3 text-white">
+                ¿Te sabes las <span class="bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent">24 Capitales</span> de Venezuela?
+            </h2>
+            <p class="text-slate-300 text-sm sm:text-base max-w-lg mx-auto mb-8 leading-relaxed">
+                Observa el estado resaltado en el mapa de Venezuela y responde oralmente el nombre de su ciudad capital. El administrador validará tu respuesta.
+            </p>
+
+            <div class="grid sm:grid-cols-2 gap-4 max-w-md mx-auto mb-8">
+                <button onclick="startGame('normal')" class="p-5 rounded-2xl glass-card border border-amber-400/30 hover:border-amber-400 hover:bg-amber-400/10 transition text-left group">
+                    <div class="text-2xl mb-1">🧭 Modo Práctica</div>
+                    <div class="font-bold text-white text-sm group-hover:text-amber-300">Sin límite de tiempo</div>
+                    <div class="text-xs text-slate-400 mt-1">Aprende y repasa cada estado a tu ritmo con validación del administrador.</div>
+                </button>
+
+                <button onclick="startGame('timed')" class="p-5 rounded-2xl glass-card border border-amber-400/30 hover:border-amber-400 hover:bg-amber-400/10 transition text-left group">
+                    <div class="text-2xl mb-1">⏱️ Contrarreloj</div>
+                    <div class="font-bold text-white text-sm group-hover:text-amber-300">3 Minutos en total</div>
+                    <div class="text-xs text-slate-400 mt-1">Ponte a prueba respondiendo lo más rápido posible.</div>
+                </button>
+            </div>
+
+            <div class="text-xs text-slate-400 flex items-center justify-center gap-2">
+                <span>💡 Tip:</span>
+                <span>El administrador activará el Modo Admin con el botón 🔒 para validar tus respuestas.</span>
+            </div>
+        </section>
+
+        <!-- GAME SCREEN -->
+        <section id="gameScreen" class="hidden w-full max-w-5xl grid lg:grid-cols-12 gap-6 items-center">
+
+            <!-- Interactive Vector Map Container (6 Cols) -->
+            <div class="lg:col-span-6 glass-panel p-4 sm:p-6 rounded-3xl border border-white/10 flex flex-col items-center justify-center relative min-h-[340px] sm:min-h-[420px]">
+                <div class="absolute top-4 left-4 text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                    Ubicación Territorial
+                </div>
+
+                <!-- SVG Vector Map of Venezuela -->
+                <div id="svgContainer" class="w-full h-64 sm:h-80 flex items-center justify-center my-2">
+                    <svg id="venezuelaMap" viewBox="0 0 600 500" class="w-full h-full max-h-full">
+                        <!-- Generated dynamically by JS with interactive paths -->
+                    </svg>
+                </div>
+
+                <div class="w-full text-center mt-2">
+                    <span class="text-xs text-slate-400 uppercase font-semibold">Estado / Entidad Federal:</span>
+                    <h3 id="stateNameText" class="font-outfit font-black text-2xl sm:text-3xl text-amber-300 tracking-wide">
+                        Cargando...
+                    </h3>
+                </div>
+            </div>
+
+            <!-- Input and Game Panel (6 Cols) -->
+            <div class="lg:col-span-6 flex flex-col gap-4">
+                
+                <!-- Scoreboard Header -->
+                <div class="glass-panel p-4 rounded-2xl flex justify-between items-center gap-2 border border-white/10 text-xs sm:text-sm font-bold">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-lg">🎯</span>
+                        <div>
+                            <div class="text-slate-400 text-[10px] uppercase">Progreso</div>
+                            <span id="progressText" class="text-white">1 / 24</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-lg">🔥</span>
+                        <div>
+                            <div class="text-slate-400 text-[10px] uppercase">Racha</div>
+                            <span id="streakText" class="text-amber-400">0</span>
+                        </div>
+                    </div>
+
+                    <div id="timerContainer" class="flex items-center gap-1.5 hidden">
+                        <span class="text-lg">⏱️</span>
+                        <div>
+                            <div class="text-slate-400 text-[10px] uppercase">Tiempo</div>
+                            <span id="timerText" class="text-emerald-400 font-outfit">03:00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Waiting Message Card (Replaces Input Card) -->
+                <div id="waitingCard" class="glass-panel p-8 rounded-3xl border border-amber-400/20 flex flex-col gap-5 shadow-xl items-center justify-center min-h-[300px]">
+                    <div class="text-6xl mb-2">🎤</div>
+                    <h3 class="font-outfit font-bold text-xl text-white text-center">
+                        Esperando respuesta del jugador...
+                    </h3>
+                    <p class="text-slate-400 text-sm text-center max-w-md">
+                        El jugador está respondiendo oralmente. Usa los controles del panel de administrador para validar la respuesta.
+                    </p>
+
+                    <!-- Feedback Alert Message -->
+                    <div id="feedbackBox" class="hidden w-full max-w-md p-4 rounded-2xl text-center font-outfit font-bold text-sm leading-relaxed">
+                        <!-- Message populated dynamically -->
+                    </div>
+
+                    <!-- Admin Mode Indicator -->
+                    <div class="mt-4 px-4 py-2 rounded-xl bg-amber-400/10 border border-amber-400/30 text-xs text-amber-300 font-semibold flex items-center gap-2">
+                        <span>💡</span>
+                        <span>Activa el Modo Administrador con el botón 🔒 en la parte superior</span>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- SUMMARY / RESULTS SCREEN -->
+        <section id="resultsScreen" class="hidden glass-panel rounded-3xl p-6 sm:p-10 text-center max-w-xl w-full my-auto shadow-2xl border border-amber-400/30">
+            <div class="text-6xl mb-3">🏆</div>
+            <h2 class="font-outfit text-3xl sm:text-4xl font-extrabold text-white mb-2">
+                ¡Desafío Completado!
+            </h2>
+            <p id="resultsSubtitle" class="text-slate-300 text-sm mb-6">Demostraste tu conocimiento sobre la geografía venezolana.</p>
+
+            <div class="grid grid-cols-3 gap-3 mb-6">
+                <div class="glass-card p-4 rounded-2xl border border-white/10">
+                    <span class="text-[10px] text-slate-400 uppercase font-bold">Aciertos</span>
+                    <div id="scoreStat" class="font-outfit font-black text-2xl text-emerald-400 my-1">0 / 24</div>
+                </div>
+                <div class="glass-card p-4 rounded-2xl border border-white/10">
+                    <span class="text-[10px] text-slate-400 uppercase font-bold">Precisión</span>
+                    <div id="accuracyStat" class="font-outfit font-black text-2xl text-amber-400 my-1">0%</div>
+                </div>
+                <div class="glass-card p-4 rounded-2xl border border-white/10">
+                    <span class="text-[10px] text-slate-400 uppercase font-bold">Tiempo</span>
+                    <div id="timeStat" class="font-outfit font-black text-2xl text-cyan-400 my-1">0s</div>
+                </div>
+            </div>
+
+            <button onclick="showStartScreen()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 font-outfit font-black text-lg shadow-xl hover:scale-105 active:scale-95 transition">
+                JUGAR DE NUEVO 🔄
+            </button>
+        </section>
+
+    </main>
+
+    <footer class="w-full text-center py-4 text-xs text-slate-500 border-t border-white/5">
+        Adivina las Capitales de Venezuela • Juego Geográfico Educativo
+    </footer>
+
+    <script>
+        // Web Audio API Synthesizer
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                [523.25, 659.25, 783.99].forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+                    gain.gain.linearRampToValueAtTime(0.01, now + idx * 0.08 + 0.2);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.2);
+                });
+            } else if (type === 'wrong') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(110, now + 0.3);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'click') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(450, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundToggleBtn').innerText = soundEnabled ? '🔊' : '🔇';
+        }
+
+        function toggleAdminMode() {
+            adminMode = !adminMode;
+            const overlay = document.getElementById('adminOverlay');
+            const btn = document.getElementById('adminToggleBtn');
+            
+            if (adminMode) {
+                overlay.classList.remove('hidden');
+                btn.innerText = '🔓';
+                btn.classList.remove('text-slate-400');
+                btn.classList.add('text-amber-300', 'border-amber-400/30');
+                updateAdminOverlay();
+            } else {
+                overlay.classList.add('hidden');
+                btn.innerText = '🔒';
+                btn.classList.remove('text-amber-300', 'border-amber-400/30');
+                btn.classList.add('text-slate-400');
+            }
+        }
+
+        function updateAdminOverlay() {
+            if (!adminMode || currentIndex >= stateQueue.length) return;
+            
+            const currentState = stateQueue[currentIndex];
+            document.getElementById('adminStateName').innerText = currentState.name;
+            document.getElementById('adminCapitalName').innerText = currentState.capital;
+        }
+
+        function markCorrect() {
+            if (currentIndex >= stateQueue.length) return;
+            
+            const currentState = stateQueue[currentIndex];
+            totalAttempts++;
+            score++;
+            streak++;
+            
+            playSound('correct');
+            showFeedback(`¡Correcto! 🎉 La capital de <strong>${currentState.name}</strong> es <strong>${currentState.capital}</strong>.`, 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40');
+            
+            document.getElementById('waitingCard').classList.add('pop-success');
+            
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 } });
+            }
+            
+            updateProgressUI();
+            
+            setTimeout(() => {
+                document.getElementById('waitingCard').classList.remove('pop-success');
+            }, 500);
+        }
+
+        function markIncorrect() {
+            if (currentIndex >= stateQueue.length) return;
+            
+            const currentState = stateQueue[currentIndex];
+            totalAttempts++;
+            streak = 0;
+            
+            playSound('wrong');
+            showFeedback(`Incorrecto. La capital de <strong>${currentState.name}</strong> es <strong>${currentState.capital}</strong>.`, 'bg-red-500/20 text-red-300 border border-red-500/40');
+            
+            document.getElementById('waitingCard').classList.add('shake');
+            
+            updateProgressUI();
+            
+            setTimeout(() => {
+                document.getElementById('waitingCard').classList.remove('shake');
+            }, 500);
+        }
+
+        function advanceState() {
+            if (currentIndex >= stateQueue.length) return;
+            
+            playSound('click');
+            currentIndex++;
+            
+            if (currentIndex >= stateQueue.length) {
+                endGame();
+                return;
+            }
+            
+            document.getElementById('feedbackBox').classList.add('hidden');
+            updateProgressUI();
+            highlightCurrentState();
+            updateAdminOverlay();
+        }
+
+        const VENEZUELA_STATES = [
+            { id: "AM", name: "Amazonas", capital: "Puerto Ayacucho", path: "M 250,330 L 330,330 L 320,470 L 220,440 Z" },
+            { id: "AN", name: "Anzoátegui", capital: "Barcelona", path: "M 360,140 L 420,150 L 410,250 L 350,230 Z" },
+            { id: "AP", name: "Apure", capital: "San Fernando de Apure", path: "M 150,250 L 320,250 L 320,310 L 170,290 Z", validAnswers: ["San Fernando de Apure", "San Fernando"] },
+            { id: "AR", name: "Aragua", capital: "Maracay", path: "M 270,120 L 290,120 L 290,160 L 270,160 Z" },
+            { id: "BA", name: "Barinas", capital: "Barinas", path: "M 140,190 L 220,210 L 210,250 L 130,220 Z" },
+            { id: "BO", name: "Bolívar", capital: "Ciudad Bolívar", path: "M 330,230 L 520,230 L 490,400 L 330,330 Z" },
+            { id: "CA", name: "Carabobo", capital: "Valencia", path: "M 245,120 L 268,120 L 268,160 L 245,160 Z" },
+            { id: "CO", name: "Cojedes", capital: "San Carlos", path: "M 220,160 L 250,160 L 240,210 L 210,200 Z" },
+            { id: "DA", name: "Delta Amacuro", capital: "Tucupita", path: "M 480,170 L 550,180 L 520,250 L 460,220 Z" },
+            { id: "DC", name: "Distrito Capital", capital: "Caracas", path: "M 292,110 L 308,110 L 308,125 L 292,125 Z" },
+            { id: "FA", name: "Falcón", capital: "Coro", path: "M 170,60 L 240,80 L 220,130 L 160,110 Z", validAnswers: ["Coro", "Santa Ana de Coro"] },
+            { id: "GU", name: "Guárico", capital: "San Juan de los Morros", path: "M 270,160 L 350,160 L 340,250 L 260,240 Z" },
+            { id: "LA", name: "Lara", capital: "Barquisimeto", path: "M 150,110 L 210,120 L 200,160 L 140,150 Z" },
+            { id: "ME", name: "Mérida", capital: "Mérida", path: "M 90,170 L 130,170 L 120,210 L 80,200 Z" },
+            { id: "MI", name: "Miranda", capital: "Los Teques", path: "M 300,125 L 350,125 L 340,160 L 295,155 Z" },
+            { id: "MO", name: "Monagas", capital: "Maturín", path: "M 420,130 L 480,130 L 470,190 L 410,180 Z" },
+            { id: "NE", name: "Nueva Esparta", capital: "La Asunción", path: "M 420,80 L 450,80 L 450,100 L 420,100 Z" },
+            { id: "PO", name: "Portuguesa", capital: "Guanare", path: "M 160,160 L 210,160 L 200,200 L 150,190 Z" },
+            { id: "SU", name: "Sucre", capital: "Cumaná", path: "M 380,100 L 470,100 L 460,130 L 370,120 Z" },
+            { id: "TA", name: "Táchira", capital: "San Cristóbal", path: "M 60,200 L 100,200 L 90,240 L 50,230 Z" },
+            { id: "TR", name: "Trujillo", capital: "Trujillo", path: "M 110,140 L 150,140 L 140,180 L 100,170 Z" },
+            { id: "LA", name: "La Guaira (Vargas)", capital: "La Guaira", path: "M 285,100 L 315,100 L 315,110 L 285,110 Z", validAnswers: ["La Guaira", "Vargas"] },
+            { id: "YA", name: "Yaracuy", capital: "San Felipe", path: "M 210,110 L 240,110 L 230,150 L 200,140 Z" },
+            { id: "ZU", name: "Zulia", capital: "Maracaibo", path: "M 60,80 L 140,100 L 120,180 L 40,140 Z" }
+        ];
+
+        // Game State Variables
+        let gameMode = 'normal';
+        let stateQueue = [];
+        let currentIndex = 0;
+        let score = 0;
+        let streak = 0;
+        let totalAttempts = 0;
+        let timerInterval = null;
+        let timeRemaining = 180; // 3 minutes
+        let startTime = 0;
+        let adminMode = false;
+
+        function normalizeString(str) {
+            return str
+                .toLowerCase()
+                .trim()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "") // Remove accents
+                .replace(/[^a-z0-9\s]/g, "") // Remove special symbols
+                .replace(/\s+/g, " "); // Normalize double spaces
+        }
+
+        function checkCapitalMatch(userInput, stateObj) {
+            const cleanInput = normalizeString(userInput);
+            if (!cleanInput) return false;
+
+            const primaryCapital = normalizeString(stateObj.capital);
+            if (cleanInput === primaryCapital) return true;
+
+            // Check alternative valid answers
+            if (stateObj.validAnswers) {
+                return stateObj.validAnswers.some(ans => normalizeString(ans) === cleanInput);
+            }
+
+            return false;
+        }
+
+        // Render SVG Vector Map
+        function renderSvgMap() {
+            const svg = document.getElementById('venezuelaMap');
+            svg.innerHTML = '';
+
+            VENEZUELA_STATES.forEach(st => {
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", st.path);
+                path.setAttribute("id", `state-path-${st.id}`);
+                path.setAttribute("class", "state-path");
+                path.setAttribute("title", st.name);
+                svg.appendChild(path);
+            });
+        }
+
+        function highlightCurrentState() {
+            // Remove previous active classes
+            document.querySelectorAll('.state-path').forEach(p => p.classList.remove('active'));
+
+            const currentState = stateQueue[currentIndex];
+            const activePath = document.getElementById(`state-path-${currentState.id}`);
+            if (activePath) {
+                activePath.classList.add('active');
+            }
+
+            document.getElementById('stateNameText').innerText = currentState.name;
+            
+            // Update admin overlay if active
+            updateAdminOverlay();
+        }
+
+        function startGame(mode) {
+            playSound('click');
+            gameMode = mode;
+            score = 0;
+            streak = 0;
+            totalAttempts = 0;
+            currentIndex = 0;
+            startTime = Date.now();
+
+            // Shuffle States Array
+            stateQueue = [...VENEZUELA_STATES].sort(() => Math.random() - 0.5);
+
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('resultsScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+
+            renderSvgMap();
+
+            if (mode === 'timed') {
+                document.getElementById('timerContainer').classList.remove('hidden');
+                timeRemaining = 180;
+                startTimer();
+            } else {
+                document.getElementById('timerContainer').classList.add('hidden');
+                clearInterval(timerInterval);
+            }
+
+            loadNextRound();
+        }
+
+        function loadNextRound() {
+            if (currentIndex >= stateQueue.length) {
+                endGame();
+                return;
+            }
+
+            // Reset UI for round
+            document.getElementById('feedbackBox').classList.add('hidden');
+            document.getElementById('waitingCard').classList.remove('shake', 'pop-success');
+
+            updateProgressUI();
+            highlightCurrentState();
+        }
+
+        function updateProgressUI() {
+            document.getElementById('progressText').innerText = `${currentIndex + 1} / ${stateQueue.length}`;
+            document.getElementById('streakText').innerText = streak;
+        }
+
+        function showFeedback(msg, classes) {
+            const box = document.getElementById('feedbackBox');
+            box.className = `w-full max-w-md p-4 rounded-2xl text-center font-outfit font-bold text-sm leading-relaxed ${classes}`;
+            box.innerHTML = msg;
+            box.classList.remove('hidden');
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            updateTimerDisplay();
+
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timeRemaining / 60);
+            const secs = timeRemaining % 60;
+            document.getElementById('timerText').innerText = 
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('resultsScreen').classList.remove('hidden');
+
+            const totalTimeSecs = Math.round((Date.now() - startTime) / 1000);
+            const accuracy = totalAttempts > 0 ? Math.round((score / totalAttempts) * 100) : 100;
+
+            document.getElementById('scoreStat').innerText = `${score} / 24`;
+            document.getElementById('accuracyStat').innerText = `${accuracy}%`;
+            document.getElementById('timeStat').innerText = `${totalTimeSecs}s`;
+
+            if (score === 24) {
+                confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
+            }
+        }
+
+        function showStartScreen() {
+            clearInterval(timerInterval);
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('resultsScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+            
+            // Hide admin overlay when returning to start
+            if (adminMode) {
+                toggleAdminMode();
+            }
+        }
+
+        // Keyboard shortcuts for admin
+        document.addEventListener('keydown', function (e) {
+            if (!adminMode) return;
+            
+            // Only handle shortcuts during game
+            if (document.getElementById('gameScreen').classList.contains('hidden')) return;
+            
+            switch(e.key.toLowerCase()) {
+                case 'c':
+                    e.preventDefault();
+                    markCorrect();
+                    break;
+                case 'i':
+                    e.preventDefault();
+                    markIncorrect();
+                    break;
+                case 'a':
+                case ' ':
+                    e.preventDefault();
+                    advanceState();
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>

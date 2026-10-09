@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trivia Venezolana - 360NET, C.A.</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            navy: '#0E1B3E',        /* Corporate Navy */
+                            navyDark: '#081026',    /* Darker Navy */
+                            navyLight: '#182A58',   /* Light Navy */
+                            green: '#75C124',       /* Corporate Lime Green */
+                            greenHover: '#63A81B',  /* Green Hover */
+                            greenLight: '#EAF7DB',  /* Soft Green Tint */
+                            bg: '#F4F6FA',          /* Clean Light Gray */
+                            card: '#FFFFFF',
+                            red: '#EF4444',
+                            amber: '#F59E0B'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #F4F6FA;
+            color: #0E1B3E;
+            user-select: none;
+        }
+
+        .gradient-brand {
+            background: linear-gradient(135deg, #0E1B3E 0%, #182A58 100%);
+        }
+
+        .gradient-green {
+            background: linear-gradient(135deg, #75C124 0%, #5EA11A 100%);
+        }
+
+        /* Active Table Highlight & Animations */
+        .table-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .table-card.active-turn {
+            border-color: #75C124 !important;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px -6px rgba(117, 193, 36, 0.35), 0 0 0 3px rgba(117, 193, 36, 0.2);
+        }
+
+        @keyframes pulseAlert {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.85; }
+        }
+
+        .timer-urgent {
+            animation: pulseAlert 0.5s infinite ease-in-out;
+            color: #EF4444 !important;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #E2E8F0;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94A3B8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748B;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col bg-brand-bg text-brand-navy">
+
+    <!-- Corporate Header -->
+    <header class="bg-brand-navy text-white shadow-lg sticky top-0 z-50 border-b-4 border-brand-green">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+            
+            <!-- Brand & Company Titles -->
+            <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
+                <div class="bg-white p-2 rounded-2xl flex items-center justify-center shadow-md border border-slate-200 shrink-0">
+                    <!-- SVG Vector Replica of 360NET Official Logo -->
+                    <svg class="h-10 sm:h-12 w-auto" viewBox="0 0 320 125" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Main 360 Numerals -->
+                        <text x="4" y="82" font-family="'Plus Jakarta Sans', sans-serif" font-weight="900" font-size="86" fill="#0E1B3E" letter-spacing="-4">360</text>
+                        <!-- Corporate Globe Swooshes -->
+                        <path d="M 190,62 A 38,38 0 0,1 268,62" stroke="#75C124" stroke-width="14" stroke-linecap="round" />
+                        <path d="M 178,46 A 52,52 0 0,1 280,46" stroke="#0E1B3E" stroke-width="12" stroke-linecap="round" />
+                        <!-- NET Text & Underline -->
+                        <text x="152" y="116" font-family="'Plus Jakarta Sans', sans-serif" font-weight="900" font-size="36" fill="#0E1B3E" letter-spacing="4">NET</text>
+                        <line x1="8" y1="106" x2="142" y2="106" stroke="#0E1B3E" stroke-width="7" stroke-linecap="round"/>
+                    </svg>
+                </div>
+
+                <div class="border-l-2 border-slate-700/80 pl-4">
+                    <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+                        360NET, C.A.
+                    </h1>
+                    <div class="flex flex-wrap items-center gap-x-3 text-xs text-slate-300 font-medium mt-0.5">
+                        <span class="bg-brand-navyLight px-2 py-0.5 rounded text-brand-green font-mono font-bold border border-brand-green/30">
+                            RIF: J-41234591-5
+                        </span>
+                        <span class="flex items-center gap-1 font-semibold text-amber-300">
+                            <i class="fa-solid fa-location-dot"></i> SUCURSAL CALABOZO
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Action Controls -->
+            <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+                <button onclick="toggleAudioMute()" id="btn-sound" class="bg-brand-navyLight hover:bg-slate-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-slate-700">
+                    <i class="fa-solid fa-volume-high text-brand-green" id="icon-sound"></i>
+                    <span class="hidden sm:inline">Sonido</span>
+                </button>
+                <button onclick="openHostModal()" class="bg-brand-navyLight hover:bg-slate-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-slate-700">
+                    <i class="fa-solid fa-sliders text-amber-400"></i>
+                    <span>Panel Host</span>
+                </button>
+                <button onclick="restartGameConfirm()" class="bg-brand-green hover:bg-brand-greenHover text-brand-navy px-4 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-2 shadow-md">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Nuevo Juego</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Interactive Arena -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
+
+        <!-- SCOREBOARD: 4 TABLES DISPLAY -->
+        <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <!-- Table 1 -->
+            <div id="table-card-1" class="table-card bg-white p-4 rounded-2xl border-2 border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Mesa #1</span>
+                        <h2 class="font-extrabold text-base text-brand-navy">Mesa 1</h2>
+                    </div>
+                    <span id="badge-turn-1" class="hidden text-[10px] font-bold bg-brand-green text-brand-navy px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                        En Turno
+                    </span>
+                </div>
+                <div class="mt-3 flex items-baseline justify-between">
+                    <span class="text-xs text-slate-500 font-semibold">Puntos:</span>
+                    <span id="score-table-1" class="text-3xl font-black text-brand-navy">0</span>
+                </div>
+                <!-- Manual Adjust Buttons -->
+                <div class="mt-2 pt-2 border-t border-slate-100 flex justify-end gap-1">
+                    <button onclick="adjustScore(1, -10)" class="w-6 h-6 rounded bg-slate-100 hover:bg-red-100 text-red-600 font-bold text-xs flex items-center justify-center transition" title="Restar 10 pts">-</button>
+                    <button onclick="adjustScore(1, 10)" class="w-6 h-6 rounded bg-slate-100 hover:bg-emerald-100 text-emerald-600 font-bold text-xs flex items-center justify-center transition" title="Sumar 10 pts">+</button>
+                </div>
+            </div>
+
+            <!-- Table 2 -->
+            <div id="table-card-2" class="table-card bg-white p-4 rounded-2xl border-2 border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Mesa #2</span>
+                        <h2 class="font-extrabold text-base text-brand-navy">Mesa 2</h2>
+                    </div>
+                    <span id="badge-turn-2" class="hidden text-[10px] font-bold bg-brand-green text-brand-navy px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                        En Turno
+                    </span>
+                </div>
+                <div class="mt-3 flex items-baseline justify-between">
+                    <span class="text-xs text-slate-500 font-semibold">Puntos:</span>
+                    <span id="score-table-2" class="text-3xl font-black text-brand-navy">0</span>
+                </div>
+                <!-- Manual Adjust Buttons -->
+                <div class="mt-2 pt-2 border-t border-slate-100 flex justify-end gap-1">
+                    <button onclick="adjustScore(2, -10)" class="w-6 h-6 rounded bg-slate-100 hover:bg-red-100 text-red-600 font-bold text-xs flex items-center justify-center transition" title="Restar 10 pts">-</button>
+                    <button onclick="adjustScore(2, 10)" class="w-6 h-6 rounded bg-slate-100 hover:bg-emerald-100 text-emerald-600 font-bold text-xs flex items-center justify-center transition" title="Sumar 10 pts">+</button>
+                </div>
+            </div>
+
+            <!-- Table 3 -->
+            <div id="table-card-3" class="table-card bg-white p-4 rounded-2xl border-2 border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Mesa #3</span>
+                        <h2 class="font-extrabold text-base text-brand-navy">Mesa 3</h2>
+                    </div>
+                    <span id="badge-turn-3" class="hidden text-[10px] font-bold bg-brand-green text-brand-navy px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                        En Turno
+                    </span>
+                </div>
+                <div class="mt-3 flex items-baseline justify-between">
+                    <span class="text-xs text-slate-500 font-semibold">Puntos:</span>
+                    <span id="score-table-3" class="text-3xl font-black text-brand-navy">0</span>
+                </div>
+                <!-- Manual Adjust Buttons -->
+                <div class="mt-2 pt-2 border-t border-slate-100 flex justify-end gap-1">
+                    <button onclick="adjustScore(3, -10)" class="w-6 h-6 rounded bg-slate-100 hover:bg-red-100 text-red-600 font-bold text-xs flex items-center justify-center transition" title="Restar 10 pts">-</button>
+                    <button onclick="adjustScore(3, 10)" class="w-6 h-6 rounded bg-slate-100 hover:bg-emerald-100 text-emerald-600 font-bold text-xs flex items-center justify-center transition" title="Sumar 10 pts">+</button>
+                </div>
+            </div>
+
+            <!-- Table 4 -->
+            <div id="table-card-4" class="table-card bg-white p-4 rounded-2xl border-2 border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Mesa #4</span>
+                        <h2 class="font-extrabold text-base text-brand-navy">Mesa 4</h2>
+                    </div>
+                    <span id="badge-turn-4" class="hidden text-[10px] font-bold bg-brand-green text-brand-navy px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                        En Turno
+                    </span>
+                </div>
+                <div class="mt-3 flex items-baseline justify-between">
+                    <span class="text-xs text-slate-500 font-semibold">Puntos:</span>
+                    <span id="score-table-4" class="text-3xl font-black text-brand-navy">0</span>
+                </div>
+                <!-- Manual Adjust Buttons -->
+                <div class="mt-2 pt-2 border-t border-slate-100 flex justify-end gap-1">
+                    <button onclick="adjustScore(4, -10)" class="w-6 h-6 rounded bg-slate-100 hover:bg-red-100 text-red-600 font-bold text-xs flex items-center justify-center transition" title="Restar 10 pts">-</button>
+                    <button onclick="adjustScore(4, 10)" class="w-6 h-6 rounded bg-slate-100 hover:bg-emerald-100 text-emerald-600 font-bold text-xs flex items-center justify-center transition" title="Sumar 10 pts">+</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- MAIN GAME ARENA CARD -->
+        <section class="bg-white rounded-3xl shadow-md border border-slate-200 overflow-hidden flex flex-col">
+            
+            <!-- Category & Timer Bar -->
+            <div class="bg-brand-navy text-white px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b-2 border-brand-green">
+                <div class="flex items-center gap-3">
+                    <span id="category-badge" class="bg-brand-green/20 text-brand-green border border-brand-green/40 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group"></i> Categoría
+                    </span>
+                    <span id="question-count" class="text-xs text-slate-300 font-medium">
+                        Pregunta 1/35
+                    </span>
+                </div>
+
+                <!-- 15-second Countdown Display -->
+                <div class="flex items-center gap-3 ml-auto">
+                    <span class="text-xs uppercase font-bold text-slate-300 tracking-wider">Tiempo:</span>
+                    <div class="bg-brand-navyDark px-4 py-1.5 rounded-xl border border-slate-700 flex items-center gap-2">
+                        <i class="fa-solid fa-stopwatch text-brand-green text-base"></i>
+                        <span id="timer-display" class="font-mono font-black text-2xl text-white">15</span>
+                        <span class="text-xs font-bold text-slate-400">s</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Animated Progress Bar -->
+            <div class="w-full bg-slate-100 h-2.5 overflow-hidden">
+                <div id="timer-progress" class="bg-brand-green h-full transition-all duration-1000 ease-linear" style="width: 100%;"></div>
+            </div>
+
+            <!-- Active Turn Banner -->
+            <div id="turn-announcer" class="bg-brand-greenLight border-b border-brand-green/20 px-6 py-2.5 flex items-center justify-between">
+                <div class="flex items-center gap-2 text-sm font-bold text-brand-navy">
+                    <i id="turn-icon" class="fa-solid fa-dice text-brand-green text-base"></i>
+                    <span id="turn-text">Turno asignado aleatoriamente a la <strong class="text-brand-navy underline">Mesa 1</strong></span>
+                </div>
+                <span class="bg-brand-navy text-white text-[11px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+                    <i class="fa-solid fa-award text-brand-green mr-1"></i> Acierto = +10 pts
+                </span>
+            </div>
+
+            <!-- Question & Answers Body -->
+            <div class="p-6 sm:p-8 flex flex-col gap-6">
+
+                <!-- Question Text -->
+                <div class="min-h-[90px] flex items-center">
+                    <h3 id="question-text" class="text-xl sm:text-2xl font-extrabold text-brand-navy leading-snug">
+                        Cargando pregunta...
+                    </h3>
+                </div>
+
+                <!-- Options Grid -->
+                <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    <!-- Dynamic option buttons inserted here -->
+                </div>
+
+                <!-- Explanation Popup Box -->
+                <div id="explanation-box" class="hidden p-4 rounded-2xl border text-sm space-y-2">
+                    <div class="font-bold flex items-center gap-2 text-base" id="explanation-header">
+                        <!-- Dynamic Header -->
+                    </div>
+                    <p id="explanation-body" class="text-slate-700 leading-relaxed">
+                        <!-- Dynamic Explanation -->
+                    </p>
+                </div>
+
+                <!-- Control Buttons for Host / Next -->
+                <div class="flex items-center justify-between border-t border-slate-100 pt-5 mt-2 gap-3 flex-wrap">
+                    <div class="flex items-center gap-2">
+                        <button onclick="pauseResumeTimer()" id="btn-pause" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-3.5 py-2.5 rounded-xl transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-pause"></i>
+                            <span id="pause-text">Pausar</span>
+                        </button>
+                    </div>
+
+                    <button onclick="nextQuestion()" id="btn-next" class="ml-auto bg-brand-navy hover:bg-brand-navyLight text-white font-extrabold text-sm px-6 py-3 rounded-xl transition flex items-center gap-2 shadow-md">
+                        <span>Siguiente Pregunta</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-brand-navy text-slate-400 py-4 text-xs border-t border-slate-800 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-white">360NET, C.A.</span>
+                <span>• SUCURSAL CALABOZO</span>
+                <span class="text-brand-green font-mono">RIF: J-41234591-5</span>
+            </div>
+            <p>© 2026 360NET - Trivia Corporativa Institucional</p>
+        </div>
+    </footer>
+
+    <!-- Host Control Panel Modal -->
+    <div id="modal-host" class="fixed inset-0 bg-brand-navy/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-extrabold text-lg text-brand-navy flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-brand-green"></i> Panel de Control del Host
+                </h3>
+                <button onclick="closeHostModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            </div>
+
+            <!-- Manual Score Adjuster -->
+            <div class="space-y-3">
+                <h4 class="text-xs font-bold uppercase text-slate-500 tracking-wider">Ajuste Manual de Puntajes:</h4>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-50 p-2.5 rounded-xl border flex justify-between items-center">
+                        <span class="font-bold text-xs text-brand-navy">Mesa 1:</span>
+                        <div class="flex gap-1">
+                            <button onclick="adjustScore(1, -10)" class="px-2 py-1 bg-red-100 text-red-700 font-bold text-xs rounded">-10</button>
+                            <button onclick="adjustScore(1, 10)" class="px-2 py-1 bg-emerald-100 text-emerald-700 font-bold text-xs rounded">+10</button>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-2.5 rounded-xl border flex justify-between items-center">
+                        <span class="font-bold text-xs text-brand-navy">Mesa 2:</span>
+                        <div class="flex gap-1">
+                            <button onclick="adjustScore(2, -10)" class="px-2 py-1 bg-red-100 text-red-700 font-bold text-xs rounded">-10</button>
+                            <button onclick="adjustScore(2, 10)" class="px-2 py-1 bg-emerald-100 text-emerald-700 font-bold text-xs rounded">+10</button>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-2.5 rounded-xl border flex justify-between items-center">
+                        <span class="font-bold text-xs text-brand-navy">Mesa 3:</span>
+                        <div class="flex gap-1">
+                            <button onclick="adjustScore(3, -10)" class="px-2 py-1 bg-red-100 text-red-700 font-bold text-xs rounded">-10</button>
+                            <button onclick="adjustScore(3, 10)" class="px-2 py-1 bg-emerald-100 text-emerald-700 font-bold text-xs rounded">+10</button>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-2.5 rounded-xl border flex justify-between items-center">
+                        <span class="font-bold text-xs text-brand-navy">Mesa 4:</span>
+                        <div class="flex gap-1">
+                            <button onclick="adjustScore(4, -10)" class="px-2 py-1 bg-red-100 text-red-700 font-bold text-xs rounded">-10</button>
+                            <button onclick="adjustScore(4, 10)" class="px-2 py-1 bg-emerald-100 text-emerald-700 font-bold text-xs rounded">+10</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Force Turn Assignment -->
+            <div class="space-y-2">
+                <h4 class="text-xs font-bold uppercase text-slate-500 tracking-wider">Forzar Turno a Mesa:</h4>
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="forceTurn(1)" class="py-2 bg-brand-navy text-white font-bold text-xs rounded-xl hover:bg-brand-navyLight">Mesa 1</button>
+                    <button onclick="forceTurn(2)" class="py-2 bg-brand-navy text-white font-bold text-xs rounded-xl hover:bg-brand-navyLight">Mesa 4</button>
+                    <button onclick="forceTurn(3)" class="py-2 bg-brand-navy text-white font-bold text-xs rounded-xl hover:bg-brand-navyLight">Mesa 3</button>
+                    <button onclick="forceTurn(4)" class="py-2 bg-brand-navy text-white font-bold text-xs rounded-xl hover:bg-brand-navyLight">Mesa 4</button>
+                </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex justify-end">
+                <button onclick="closeHostModal()" class="bg-slate-800 text-white font-bold px-5 py-2 rounded-xl text-xs">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATASET: 35 VENEZUELAN TRIVIA QUESTIONS ---
+        const TRIVIA_QUESTIONS = [
+            // CATEGORY 1: HISTORIA DE VENEZUELA
+            {
+                category: "Historia de Venezuela",
+                question: "¿En qué año se firmó el Acta de la Declaración de la Independencia de Venezuela?",
+                options: ["1810", "1811", "1821", "1830"],
+                correct: 1,
+                explanation: "El Acta de la Independencia de Venezuela se firmó el 5 de julio de 1811, declarando la separación definitiva de la Corona Española."
+            },
+            {
+                category: "Historia de Venezuela",
+                question: "¿Cuál batalla selló definitivamente la independencia de Venezuela en 1821?",
+                options: ["Batalla de Boyacá", "Batalla de Pichincha", "Batalla de Carabobo", "Batalla de Ayacucho"],
+                correct: 2,
+                explanation: "La Batalla de Carabobo, librada el 24 de junio de 1821, fue la acción militar decisiva para la independencia del país."
+            },
+            {
+                category: "Historia de Venezuela",
+                question: "¿Quién es conocido como el 'Gran Mariscal de Ayacucho'?",
+                options: ["Francisco de Miranda", "Antonio José de Sucre", "Rafael Urdaneta", "José Antonio Páez"],
+                correct: 1,
+                explanation: "Antonio José de Sucre recibió el título de Gran Mariscal de Ayacucho tras su heroica victoria en Perú en 1824."
+            },
+            {
+                category: "Historia de Venezuela",
+                question: "¿En qué ciudad nació el Libertador Simón Bolívar?",
+                options: ["Caracas", "Valencia", "Maracaibo", "Ciudad Bolívar"],
+                correct: 0,
+                explanation: "Simón Bolívar nació en Caracas el 24 de julio de 1783."
+            },
+            {
+                category: "Historia de Venezuela",
+                question: "¿Cuál fue el primer nombre dado a la ciudad de Caracas al momento de su fundación en 1567?",
+                options: ["Santiago de León de Caracas", "Nuestra Señora de la Asunción", "San Francisco de Caracas", "Nueva Córdoba"],
+                correct: 0,
+                explanation: "Diego de Losada la fundó con el nombre oficial de Santiago de León de Caracas el 25 de julio de 1567."
+            },
+            {
+                category: "Historia de Venezuela",
+                question: "¿Qué ilustre venezolano trajo la primera imprenta y la bandera tricolor a Venezuela en 1806?",
+                options: ["Simón Rodríguez", "Francisco de Miranda", "Andrés Bello", "José María Vargas"],
+                correct: 1,
+                explanation: "Francisco de Miranda trajo la primera imprenta al país y diseñó el pabellón tricolor en la expedición del Leander."
+            },
+            {
+                category: "Historia de Venezuela",
+                question: "¿En qué año ocurrió la Batalla Naval del Lago de Maracaibo?",
+                options: ["1811", "1821", "1823", "1830"],
+                correct: 2,
+                explanation: "El 24 de julio de 1823 se libró la Batalla Naval del Lago de Maracaibo, expulsando al último reducto español."
+            },
+
+            // CATEGORY 2: CULTURA GENERAL Y GEOGRAFÍA DE VENEZUELA
+            {
+                category: "Cultura General",
+                question: "¿Cuál es la caída de agua más alta del mundo, ubicada en el Estado Bolívar?",
+                options: ["Salto Kukenan", "Salto Ángel (Kerepakupai Vená)", "Cataratas del Iguazú", "Salto Aponguao"],
+                correct: 1,
+                explanation: "El Salto Ángel en el Parque Nacional Canaima es la cascada más alta del planeta con 979 metros de altura."
+            },
+            {
+                category: "Cultura General",
+                question: "¿En qué estado se encuentra el fenómeno meteorológico conocido como el 'Relámpago del Catatumbo'?",
+                options: ["Falcón", "Zulia", "Mérida", "Sucre"],
+                correct: 1,
+                explanation: "El Relámpago del Catatumbo ocurre en la cuenca del Lago de Maracaibo, Estado Zulia."
+            },
+            {
+                category: "Cultura General",
+                question: "¿Cuál es el árbol nacional de Venezuela?",
+                options: ["El Araguaney", "El Samán", "La Ceiba", "El Bucare"],
+                correct: 0,
+                explanation: "El Araguaney (Handroanthus chrysanthus) fue declarado Árbol Nacional el 29 de mayo de 1948."
+            },
+            {
+                category: "Cultura General",
+                question: "¿Cuál es el ave nacional de Venezuela?",
+                options: ["El Guacamayo Azul", "El Turpial", "El Colibrí", "El Cóndor"],
+                correct: 1,
+                explanation: "El Turpial (Icterus icterus) fue proclamado Ave Nacional de Venezuela el 23 de mayo de 1958."
+            },
+            {
+                category: "Cultura General",
+                question: "¿Cuál es la flor nacional de Venezuela?",
+                options: ["La Rosa", "La Orquídea (Flor de Mayo)", "El Girasol", "La Cayenne"],
+                correct: 1,
+                explanation: "La Orquídea Cattleya mossiae fue declarada Flor Nacional el 23 de mayo de 1951."
+            },
+            {
+                category: "Cultura General",
+                question: "¿En qué estado venezolano se ubica la histórica ciudad de Calabozo?",
+                options: ["Cojedes", "Guárico", "Apure", "Barinas"],
+                correct: 1,
+                explanation: "Calabozo es una importante e histórica ciudad colonial del Estado Guárico, sede de la Sucursal 360NET."
+            },
+            {
+                category: "Cultura General",
+                question: "¿Cómo se llama el instrumento musical de cuatro cuerdas típico del folclore venezolano?",
+                options: ["Maraca", "Cuatro", "Bandola", "Requinto"],
+                correct: 1,
+                explanation: "El Cuatro venezolano es el instrumento emblemático de la música folclórica del país."
+            },
+
+            // CATEGORY 3: COMIDA TÍPICA VENEZOLANA
+            {
+                category: "Comida Típica",
+                question: "¿Cuáles son los 4 ingredientes principales del Pabellón Criollo tradicional?",
+                options: [
+                    "Arroz, carne mechada, caraotas negras y tajadas",
+                    "Arroz, pollo, lentejas y papas",
+                    "Carne asada, yuca, queso y aguacate",
+                    "Arepa, chicharrón, queso mano y mantequilla"
+                ],
+                correct: 0,
+                explanation: "El Pabellón Criollo se compone tradicionalmente de arroz blanco, carne mechada, caraotas negras y tajadas de plátano maduro."
+            },
+            {
+                category: "Comida Típica",
+                question: "¿Cómo se le conoce popularmente a la arepa rellena con pollo desmechado, mayonesa y aguacate?",
+                options: ["La Pelúa", "La Catira", "Reina Pepiada", "Sifrina"],
+                correct: 2,
+                explanation: "La 'Reina Pepiada' fue creada en los años 50 en honor a Susana Duijm, primera Miss Mundo venezolana."
+            },
+            {
+                category: "Comida Típica",
+                question: "¿De qué ingrediente principal está hecha la Cachapa tradicional llanera?",
+                options: ["Harina de trigo", "Maíz tierno (choclo)", "Yuca amarga", "Plátano verde"],
+                correct: 1,
+                explanation: "La cachapa se elabora con masa de maíz tierno molido y dulce, cocinada a la plancha o budare."
+            },
+            {
+                category: "Comida Típica",
+                question: "¿Qué plato tradicional no puede faltar en la cena navideña venezolana?",
+                options: ["Hallaca", "Mondongo", "Pisillo de Chigüire", "Sancocho"],
+                correct: 0,
+                explanation: "La Hallaca es el plato navideño por excelencia en Venezuela, envuelta en hojas de plátano."
+            },
+            {
+                category: "Comida Típica",
+                question: "¿Cuál es la bebida dulce elaborada a base de arroz, leche y canela muy popular en Venezuela?",
+                options: ["Carato de acupe", "Chicha de arroz", "Tizana", "Papelón con limón"],
+                correct: 1,
+                explanation: "La Chicha venezolana de arroz es una bebida espesa y dulce que se sirve con hielo, leche condensada y canela."
+            },
+            {
+                category: "Comida Típica",
+                question: "¿Qué pasapalos rellenos de queso en masa de harina son indispensables en todas las fiestas venezolanas?",
+                options: ["Empanaditas", "Pastelitos", "Tequeños", "Mandocas"],
+                correct: 2,
+                explanation: "El Tequeño es el pasapalo estrella de la gastronomía y las fiestas en Venezuela."
+            },
+
+            // CATEGORY 4: DATOS CURIOSOS DE VENEZUELA
+            {
+                category: "Datos Curiosos",
+                question: "¿Cuál es el teleférico de pasajeros más alto y segundo más largo del mundo?",
+                options: ["Teleférico de Caracas", "Teleférico Mukumbarí de Mérida", "Teleférico de Puerto Plata", "Teleférico de Quito"],
+                correct: 1,
+                explanation: "El Teleférico Mukumbarí de Mérida alcanza los 4.765 metros sobre el nivel del mar en la estación Pico Espejo."
+            },
+            {
+                category: "Datos Curiosos",
+                question: "¿Qué importante científico venezolano inventó el bisturí de diamante?",
+                options: ["Jacinto Convit", "Humberto Fernández-Morán", "Marcel Roche", "Baruj Benacerraf"],
+                correct: 1,
+                explanation: "Dr. Humberto Fernández-Morán inventó el bisturí de diamante y contribuyó al desarrollo de la microscopía electrónica."
+            },
+            {
+                category: "Datos Curiosos",
+                question: "¿Qué médico venezolano desarrolló la vacuna contra la lepra?",
+                options: ["Dr. Jacinto Convit", "Dr. José María Vargas", "Dr. José Gregorio Hernández", "Dr. Luis Razetti"],
+                correct: 0,
+                explanation: "El Dr. Jacinto Convit es reconocido mundialmente por desarrollar la vacuna contra la lepra y la leishmaniasis."
+            },
+            {
+                category: "Datos Curiosos",
+                question: "¿Cuál es el lago más grande de Sudamérica ubicado en territorio venezolano?",
+                options: ["Lago de Valencia", "Lago de Maracaibo", "Lago Titicaca", "Embalse del Guri"],
+                correct: 1,
+                explanation: "El Lago de Maracaibo, con más de 13.000 km², es el lago más grande de Sudamérica."
+            },
+            {
+                category: "Datos Curiosos",
+                question: "¿En qué parque nacional venezolano se encuentran las formaciones geológicas más antiguas del planeta (Tepuyes)?",
+                options: ["Parque Nacional Henri Pittier", "Parque Nacional Canaima", "Parque Nacional Mochima", "Parque Nacional el Ávila"],
+                correct: 1,
+                explanation: "Los tepuyes del Parque Nacional Canaima pertenecen al Escudo Guayanés, con más de 2.000 millones de años."
+            },
+
+            // CATEGORY 5: ADIVINANZAS FOLCLÓRICAS Y DICHOS POPULARES
+            {
+                category: "Adivinanzas y Dichos",
+                question: "Adivinanza: 'Tengo verde el caparazón, roja la barriga y semillas negras en el corazón'. ¿Qué soy?",
+                options: ["La Patilla (Sandía)", "El Mango", "La Guayaba", "El Aguacate"],
+                correct: 0,
+                explanation: "¡La Patilla! Fruta muy fresca y popular en los llanos de Venezuela."
+            },
+            {
+                category: "Adivinanzas y Dichos",
+                question: "¿Qué significa el refrán venezolano: 'Tarde piaste pajarito'?",
+                options: [
+                    "Llegar a tiempo a un evento",
+                    "Arrepentirse o reaccionar cuando ya es muy tarde",
+                    "Tener hambre por la tarde",
+                    "Comprar un ave de corral"
+                ],
+                correct: 1,
+                explanation: "Se usa popularmente cuando alguien intenta remediar o disculparse por algo cuando el daño ya está hecho."
+            },
+            {
+                category: "Adivinanzas y Dichos",
+                question: "Adivinanza Llanera: 'Canta en la mata, no tiene pico, tiene cuatro patas y no es un mico'. ¿Qué es?",
+                options: ["El Chigüire", "La Rana / Charrascada", "La Chigarra / Cigarra", "La Grilla / Chigarra"],
+                correct: 2,
+                explanation: "La chigarra (cigarra) muy célebre en la literatura y fauna de los llanos."
+            },
+            {
+                category: "Adivinanzas y Dichos",
+                question: "¿Qué significa en Venezuela la expresión popular: 'Estar chivo que no da leche'?",
+                options: [
+                    "Estar muy alegre",
+                    "Estar de mal humor o atravesado",
+                    "Tener mucho dinero",
+                    "Estar cansado"
+                ],
+                correct: 1,
+                explanation: "Significa estar de mal genio, intratable o poco dispuesto a colaborar."
+            },
+            {
+                category: "Adivinanzas y Dichos",
+                question: "¿A qué se refiere un venezolano cuando dice que alguien es 'Más criollo que la arepa'?",
+                options: [
+                    "Que es muy autóctono, propio y auténtico de Venezuela",
+                    "Que le gusta cocinar",
+                    "Que es de la capital",
+                    "Que es madrugador"
+                ],
+                correct: 0,
+                explanation: "Es la máxima expresión para resaltar que algo o alguien posee una identidad 100% venezolana."
+            }
+        ];
+
+        // --- GAME STATE ---
+        let questionsQueue = [];
+        let currentQuestionIndex = 0;
+        let tableScores = { 1: 0, 2: 0, 3: 0, 4: 0 };
+        let activeTableTurn = 1;
+
+        let timerCount = 15;
+        let timerInterval = null;
+        let isPaused = false;
+        let soundEnabled = true;
+
+        // Equal distribution Queue for fairness
+        let tableDistributionQueue = [];
+
+        // Audio Context Synthesizer
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                if (!audioCtx) audioCtx = new AudioCtx();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'tick') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, now);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'correct') {
+                    // Happy chord
+                    [523.25, 659.25, 783.99].forEach((f, i) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.frequency.value = f;
+                        g.gain.setValueAtTime(0.12, now + i * 0.08);
+                        g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.3);
+                        o.start(now + i * 0.08);
+                        o.stop(now + i * 0.08 + 0.3);
+                    });
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.exponentialRampToValueAtTime(110, now + 0.25);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                }
+            } catch (e) {}
+        }
+
+        window.onload = function() {
+            restartGame();
+        };
+
+        function restartGameConfirm() {
+            if (confirm("¿Deseas reiniciar la trivia y los puntajes de las 4 mesas?")) {
+                restartGame();
+            }
+        }
+
+        function restartGame() {
+            // Shuffle Questions
+            questionsQueue = [...TRIVIA_QUESTIONS].sort(() => Math.random() - 0.5);
+            currentQuestionIndex = 0;
+            tableScores = { 1: 0, 2: 0, 3: 0, 4: 0 };
+            
+            // Reset distribution queue for fair turns
+            resetTableQueue();
+
+            updateScoreboardUI();
+            loadNextQuestion();
+        }
+
+        function resetTableQueue() {
+            // Ensure equal turns across 4 tables in shuffled cycles
+            tableDistributionQueue = [1, 2, 3, 4].sort(() => Math.random() - 0.5);
+        }
+
+        function getNextTableTurn() {
+            if (tableDistributionQueue.length === 0) {
+                resetTableQueue();
+            }
+            return tableDistributionQueue.shift();
+        }
+
+        function loadNextQuestion() {
+            clearInterval(timerInterval);
+            isPaused = false;
+            document.getElementById('pause-text').innerText = "Pausar";
+            document.getElementById('explanation-box').classList.add('hidden');
+
+            if (currentQuestionIndex >= questionsQueue.length) {
+                finishGame();
+                return;
+            }
+
+            // Assign turn fairly
+            activeTableTurn = getNextTableTurn();
+            updateTurnUI();
+
+            const q = questionsQueue[currentQuestionIndex];
+
+            // Render Header & Category
+            document.getElementById('category-badge').innerHTML = `<i class="fa-solid fa-layer-group"></i> ${q.category}`;
+            document.getElementById('question-count').innerText = `Pregunta ${currentQuestionIndex + 1}/${questionsQueue.length}`;
+            document.getElementById('question-text').innerText = q.question;
+
+            // Render Options
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn w-full text-left bg-slate-50 hover:bg-brand-navy hover:text-white text-slate-800 font-bold p-4 rounded-2xl border-2 border-slate-200 transition-all duration-200 flex items-center justify-between text-sm sm:text-base shadow-sm";
+                btn.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-xl bg-slate-200 text-brand-navy text-xs font-black flex items-center justify-center shrink-0 border border-slate-300">
+                            ${String.fromCharCode(65 + idx)}
+                        </span>
+                        <span>${opt}</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-slate-300 text-xs"></i>
+                `;
+                btn.onclick = () => selectOption(idx);
+                optionsContainer.appendChild(btn);
+            });
+
+            // Start 15s Timer
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerCount = 15;
+            updateTimerDisplay();
+
+            timerInterval = setInterval(() => {
+                if (isPaused) return;
+
+                timerCount--;
+                updateTimerDisplay();
+
+                if (timerCount <= 3 && timerCount > 0) {
+                    playSound('tick');
+                }
+
+                if (timerCount <= 0) {
+                    clearInterval(timerInterval);
+                    playSound('wrong');
+                    handleTimeOut();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const display = document.getElementById('timer-display');
+            const progress = document.getElementById('timer-progress');
+            
+            display.innerText = timerCount;
+            const percentage = (timerCount / 15) * 100;
+            progress.style.width = `${percentage}%`;
+
+            if (timerCount <= 4) {
+                display.classList.add('timer-urgent');
+                progress.className = "bg-red-500 h-full transition-all duration-1000 ease-linear";
+            } else {
+                display.classList.remove('timer-urgent');
+                progress.className = "bg-brand-green h-full transition-all duration-1000 ease-linear";
+            }
+        }
+
+        function pauseResumeTimer() {
+            isPaused = !isPaused;
+            document.getElementById('pause-text').innerText = isPaused ? "Reanudar" : "Pausar";
+        }
+
+        function selectOption(selectedIndex) {
+            clearInterval(timerInterval);
+            const q = questionsQueue[currentQuestionIndex];
+            const isCorrect = selectedIndex === q.correct;
+
+            // Target answering table
+            const currentTable = activeTableTurn;
+
+            // Lock options and highlight correct/incorrect
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach((btn, idx) => {
+                btn.onclick = null; // Disable clicks
+                if (idx === q.correct) {
+                    btn.className = "w-full text-left bg-emerald-500 text-white font-bold p-4 rounded-2xl border-2 border-emerald-700 shadow-md flex items-center justify-between text-sm sm:text-base";
+                } else if (idx === selectedIndex && !isCorrect) {
+                    btn.className = "w-full text-left bg-red-500 text-white font-bold p-4 rounded-2xl border-2 border-red-700 shadow-md flex items-center justify-between text-sm sm:text-base";
+                }
+            });
+
+            if (isCorrect) {
+                playSound('correct');
+                // Exact 10 points awarded per correct answer
+                tableScores[currentTable] += 10;
+                updateScoreboardUI();
+
+                showExplanation(true, `¡Excelente respuesta de la Mesa ${currentTable}! (+10 pts)`, q.explanation);
+            } else {
+                playSound('wrong');
+                showExplanation(false, `Respuesta incorrecta de la Mesa ${currentTable}.`, q.explanation);
+            }
+        }
+
+        function handleTimeOut() {
+            const q = questionsQueue[currentQuestionIndex];
+            
+            // Lock options on timeout
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach((btn, idx) => {
+                btn.onclick = null;
+                if (idx === q.correct) {
+                    btn.className = "w-full text-left bg-emerald-500 text-white font-bold p-4 rounded-2xl border-2 border-emerald-700 shadow-md flex items-center justify-between text-sm sm:text-base";
+                }
+            });
+
+            showExplanation(false, `¡Tiempo agotado para la Mesa ${activeTableTurn}!`, q.explanation);
+        }
+
+        function showExplanation(isSuccess, title, text) {
+            const box = document.getElementById('explanation-box');
+            const header = document.getElementById('explanation-header');
+            const body = document.getElementById('explanation-body');
+
+            box.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-200', 'bg-red-50', 'border-red-200');
+
+            if (isSuccess) {
+                box.classList.add('bg-emerald-50', 'border-emerald-200');
+                header.className = "font-bold flex items-center gap-2 text-base text-emerald-800";
+                header.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 text-xl"></i> ${title}`;
+            } else {
+                box.classList.add('bg-red-50', 'border-red-200');
+                header.className = "font-bold flex items-center gap-2 text-base text-red-800";
+                header.innerHTML = `<i class="fa-solid fa-circle-xmark text-red-600 text-xl"></i> ${title}`;
+            }
+
+            body.innerText = text;
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            loadNextQuestion();
+        }
+
+        function updateTurnUI() {
+            [1, 2, 3, 4].forEach(tbl => {
+                const card = document.getElementById(`table-card-${tbl}`);
+                const badgeTurn = document.getElementById(`badge-turn-${tbl}`);
+
+                card.classList.remove('active-turn');
+                badgeTurn.classList.add('hidden');
+
+                if (activeTableTurn === tbl) {
+                    card.classList.add('active-turn');
+                    badgeTurn.classList.remove('hidden');
+                }
+            });
+
+            const announcerText = document.getElementById('turn-text');
+            announcerText.innerHTML = `Turno asignado a la <strong class="text-brand-navy underline">Mesa ${activeTableTurn}</strong>`;
+        }
+
+        function updateScoreboardUI() {
+            [1, 2, 3, 4].forEach(tbl => {
+                document.getElementById(`score-table-${tbl}`).innerText = tableScores[tbl];
+            });
+        }
+
+        function adjustScore(tableNum, delta) {
+            tableScores[tableNum] = Math.max(0, tableScores[tableNum] + delta);
+            updateScoreboardUI();
+        }
+
+        function forceTurn(tableNum) {
+            activeTableTurn = tableNum;
+            updateTurnUI();
+            closeHostModal();
+        }
+
+        function toggleAudioMute() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('icon-sound');
+            if (soundEnabled) {
+                icon.className = "fa-solid fa-volume-high text-brand-green";
+            } else {
+                icon.className = "fa-solid fa-volume-xmark text-red-400";
+            }
+        }
+
+        function openHostModal() {
+            document.getElementById('modal-host').classList.remove('hidden');
+        }
+
+        function closeHostModal() {
+            document.getElementById('modal-host').classList.add('hidden');
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+
+            // Determine winner
+            let highestScore = -1;
+            let winnerTable = 1;
+
+            [1, 2, 3, 4].forEach(tbl => {
+                if (tableScores[tbl] > highestScore) {
+                    highestScore = tableScores[tbl];
+                    winnerTable = tbl;
+                }
+            });
+
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 150,
+                    spread: 80,
+                    origin: { y: 0.6 },
+                    colors: ['#0E1B3E', '#75C124', '#F59E0B']
+                });
+            }
+
+            alert(`¡Juego finalizado!\n\n🏆 ¡Felicidades Mesa ${winnerTable} por obtener el primer lugar con ${highestScore} puntos!`);
+        }
+    </script>
+</body>
+</html>

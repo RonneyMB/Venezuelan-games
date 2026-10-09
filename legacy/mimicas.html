@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>360NET C.A. - Torneo de Mímicas Venezolanas</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandDark: '#0D1730',
+                        brandNavy: '#101B3B',
+                        brandBlue: '#1C2C5B',
+                        brandGreen: '#70C600',
+                        brandGreenHover: '#5ea700',
+                        brandLightBg: '#F3F5F9'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F3F5F9;
+            color: #0D1730;
+            overflow-x: hidden;
+        }
+
+        .gradient-brand {
+            background: linear-gradient(135deg, #0D1730 0%, #101B3B 50%, #1C2C5B 100%);
+        }
+
+        .pulse-active {
+            animation: pulse-green 2s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(112, 198, 0, 0.6); }
+            70% { box-shadow: 0 0 0 15px rgba(112, 198, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(112, 198, 0, 0); }
+        }
+
+        .card-flip {
+            transition: transform 0.3s ease;
+        }
+
+        .card-flip:hover {
+            transform: translateY(-4px);
+        }
+
+        .timer-warning {
+            animation: blink-red 1s infinite;
+        }
+
+        @keyframes blink-red {
+            0%, 100% { color: #ef4444; }
+            50% { color: #ffffff; }
+        }
+
+        /* Bracket connection lines */
+        .bracket-line {
+            position: relative;
+        }
+        .bracket-line::after {
+            content: '';
+            position: absolute;
+            background-color: #cbd5e1;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-100">
+
+    <header class="w-full bg-brandDark text-white shadow-lg border-b-4 border-brandGreen">
+        <!-- Top Photo Bar -->
+        <div class="relative w-full h-36 md:h-48 overflow-hidden bg-brandNavy">
+            <img src="image_6ecd3c.jpg" alt="360NET equipo comiendo" class="w-full h-full object-cover object-center opacity-85 hover:scale-105 transition-transform duration-700" onerror="this.src='https://placehold.co/1200x300/101B3B/FFFFFF?text=360NET+Equipo+Calabozo'">
+            <div class="absolute inset-0 bg-gradient-to-t from-brandDark via-brandDark/40 to-transparent flex items-end justify-between p-4 md:px-8">
+                <div class="flex items-center space-x-3 md:space-x-4 bg-brandNavy/90 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 shadow-xl">
+                    <img src="image_6ec59d.png" alt="360NET Logo" class="h-10 md:h-14 w-auto object-contain bg-white p-1 rounded-lg shadow" onerror="this.src='https://placehold.co/150x60/101B3B/70C600?text=360NET'">
+                    <div>
+                        <h1 class="text-lg md:text-2xl font-extrabold tracking-tight text-white uppercase flex items-center gap-2">
+                            <span>360NET, C.A</span>
+                            <span class="text-brandGreen font-black">|</span>
+                            <span class="text-brandGreen text-base md:text-xl">SUCURSAL CALABOZO</span>
+                        </h1>
+                        <p class="text-xs md:text-sm text-slate-300 font-medium"><i class="fa-solid fa-trophy text-amber-400 mr-1"></i> Gran Torneo de Mímicas y Charades Venezolanas</p>
+                    </div>
+                </div>
+
+                <div class="hidden sm:flex items-center space-x-2 bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-white/10 text-xs">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-brandGreen animate-ping"></span>
+                    <span class="font-semibold text-slate-200">En Vivo - 4 Mesas en Competencia</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col gap-6">
+
+        <!-- Navigation Tabs -->
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-center gap-2">
+                <button id="nav-bracket-btn" onclick="switchTab('bracket')" class="px-4 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 bg-brandNavy text-white shadow-md">
+                    <i class="fa-solid fa-sitemap"></i>
+                    <span>Tabla de Campeonato</span>
+                </button>
+                <button id="nav-game-btn" onclick="switchTab('game')" class="px-4 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200">
+                    <i class="fa-solid fa-gamepad text-brandGreen"></i>
+                    <span>Mesa de Juego</span>
+                </button>
+                <button id="nav-words-btn" onclick="switchTab('words')" class="px-4 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>Banco de Palabras (100+)</span>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="resetTournament()" class="text-xs font-semibold px-3 py-2 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 transition-colors">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Reiniciar Torneo
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 1: BRACKET DE CAMPEONATO ==================== -->
+        <section id="tab-bracket" class="flex flex-col gap-6">
+            
+            <!-- Banner Informativo de Bienvenida -->
+            <div class="bg-gradient-to-r from-brandNavy to-brandBlue text-white p-6 rounded-2xl shadow-lg relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="z-10 space-y-2 text-center md:text-left">
+                    <span class="inline-block bg-brandGreen/20 text-brandGreen text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider border border-brandGreen/30">Formato Eliminatoria Directa</span>
+                    <h2 class="text-2xl md:text-3xl font-black">¡Desafío de Mímicas 360NET!</h2>
+                    <p class="text-slate-300 text-sm max-w-2xl">
+                        Cada mesa tiene <strong>7 minutos continuos</strong> para adivinar la mayor cantidad posible de venezolanismos, comidas, tradiciones y lugares.
+                        Pasa el cursor o pulsa <strong>ENTER / Teclas</strong> para avanzar de palabra rápidamente.
+                    </p>
+                </div>
+                <div class="z-10 flex-shrink-0">
+                    <button onclick="startNextMatchTurn()" class="px-6 py-4 bg-brandGreen hover:bg-brandGreenHover text-brandNavy font-extrabold text-lg rounded-xl shadow-xl transition-all transform hover:scale-105 active:scale-95 flex items-center gap-3">
+                        <i class="fa-solid fa-play text-xl"></i>
+                        <span id="start-turn-btn-text">INICIAR TURNO DE JUEGO</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Visual Bracket Chart -->
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-brandNavy flex items-center gap-2">
+                        <i class="fa-solid fa-trophy text-amber-500"></i>
+                        <span>Cuadro del Campeonato (4 Mesas)</span>
+                    </h3>
+                    <span id="current-phase-badge" class="px-3 py-1 bg-blue-100 text-brandNavy text-xs font-bold rounded-full border border-blue-200">
+                        Fase: Semifinales
+                    </span>
+                </div>
+
+                <div class="min-w-[700px] grid grid-cols-3 gap-6 items-center py-4">
+
+                    <!-- COLUMNA 1: SEMIFINALES -->
+                    <div class="space-y-8">
+                        <div class="text-xs font-bold uppercase tracking-wider text-slate-400 text-center mb-2">Semifinales (7 min por Mesa)</div>
+                        
+                        <!-- MATCH 1: Mesa 1 vs Mesa 2 -->
+                        <div id="bracket-m1" class="border-2 border-slate-200 rounded-xl p-3 bg-slate-50 relative shadow-sm transition-all">
+                            <div class="text-xs font-bold text-slate-400 mb-2 flex justify-between">
+                                <span>SEMIFINAL 1</span>
+                                <span id="m1-status-tag" class="text-brandNavy">Pendiente</span>
+                            </div>
+                            <!-- Mesa 1 -->
+                            <div id="card-mesa1" class="flex justify-between items-center p-2 rounded-lg bg-white border border-slate-200 mb-2 font-bold">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-users text-blue-600"></i> Mesa 1</span>
+                                <span id="score-mesa1" class="px-2.5 py-1 bg-slate-100 rounded-md text-sm">0 pts</span>
+                            </div>
+                            <!-- Mesa 2 -->
+                            <div id="card-mesa2" class="flex justify-between items-center p-2 rounded-lg bg-white border border-slate-200 font-bold">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-users text-indigo-600"></i> Mesa 2</span>
+                                <span id="score-mesa2" class="px-2.5 py-1 bg-slate-100 rounded-md text-sm">0 pts</span>
+                            </div>
+                        </div>
+
+                        <!-- MATCH 2: Mesa 3 vs Mesa 4 -->
+                        <div id="bracket-m2" class="border-2 border-slate-200 rounded-xl p-3 bg-slate-50 relative shadow-sm transition-all">
+                            <div class="text-xs font-bold text-slate-400 mb-2 flex justify-between">
+                                <span>SEMIFINAL 2</span>
+                                <span id="m2-status-tag" class="text-brandNavy">Pendiente</span>
+                            </div>
+                            <!-- Mesa 3 -->
+                            <div id="card-mesa3" class="flex justify-between items-center p-2 rounded-lg bg-white border border-slate-200 mb-2 font-bold">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-users text-emerald-600"></i> Mesa 3</span>
+                                <span id="score-mesa3" class="px-2.5 py-1 bg-slate-100 rounded-md text-sm">0 pts</span>
+                            </div>
+                            <!-- Mesa 4 -->
+                            <div id="card-mesa4" class="flex justify-between items-center p-2 rounded-lg bg-white border border-slate-200 font-bold">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-users text-amber-600"></i> Mesa 4</span>
+                                <span id="score-mesa4" class="px-2.5 py-1 bg-slate-100 rounded-md text-sm">0 pts</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COLUMNA 2: GRAN FINAL -->
+                    <div class="space-y-8 flex flex-col justify-center">
+                        <div class="text-xs font-bold uppercase tracking-wider text-slate-400 text-center mb-2">Gran Final</div>
+
+                        <div id="bracket-final" class="border-2 border-amber-300 bg-amber-50/50 rounded-xl p-4 relative shadow-md">
+                            <div class="text-xs font-extrabold text-amber-800 mb-2 flex justify-between">
+                                <span><i class="fa-solid fa-crown text-amber-500"></i> DUELO FINAL</span>
+                                <span id="final-status-tag">Por definir</span>
+                            </div>
+                            <!-- Ganador Semi 1 -->
+                            <div id="card-final1" class="flex justify-between items-center p-2.5 rounded-lg bg-white border border-slate-200 mb-2 font-bold">
+                                <span id="final-team1-name" class="text-slate-400 flex items-center gap-2">Ganador Semifinal 1</span>
+                                <span id="score-final1" class="px-2.5 py-1 bg-slate-100 rounded-md text-sm">--</span>
+                            </div>
+                            <!-- Ganador Semi 2 -->
+                            <div id="card-final2" class="flex justify-between items-center p-2.5 rounded-lg bg-white border border-slate-200 font-bold">
+                                <span id="final-team2-name" class="text-slate-400 flex items-center gap-2">Ganador Semifinal 2</span>
+                                <span id="score-final2" class="px-2.5 py-1 bg-slate-100 rounded-md text-sm">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COLUMNA 3: CAMPEÓN -->
+                    <div class="flex flex-col items-center justify-center p-6 bg-gradient-to-b from-amber-50 to-orange-50 border-2 border-dashed border-amber-300 rounded-2xl text-center">
+                        <div class="w-20 h-20 bg-amber-400 text-white rounded-full flex items-center justify-center text-3xl shadow-lg mb-3 animate-bounce">
+                            <i class="fa-solid fa-trophy"></i>
+                        </div>
+                        <span class="text-xs font-black uppercase text-amber-800 tracking-wider">MESA CAMPEONA 360NET</span>
+                        <h4 id="champion-name" class="text-2xl font-black text-brandNavy my-1">¿Quién Ganará?</h4>
+                        <p id="champion-sub" class="text-xs text-slate-500">Compite y acierta la mayor cantidad de mímicas en 7 minutos</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Tabla Resumen de Posiciones -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h3 class="text-lg font-bold text-brandNavy mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-list-ol text-brandGreen"></i>
+                    <span>Tabla de Resultados por Mesa</span>
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs uppercase font-extrabold border-b border-slate-200">
+                                <th class="p-3">Mesa</th>
+                                <th class="p-3">Semifinal (Aciertos / 7 min)</th>
+                                <th class="p-3">Final (Aciertos / 7 min)</th>
+                                <th class="p-3">Estatus</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scores-table-body" class="text-sm font-semibold divide-y divide-slate-100">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ==================== TAB 2: MESA DE JUEGO / TIMER ==================== -->
+        <section id="tab-game" class="hidden flex-col gap-6">
+
+            <!-- Card Superior de Estado de Turno -->
+            <div class="bg-brandNavy text-white p-4 rounded-2xl shadow-md flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-brandGreen text-brandNavy rounded-xl flex items-center justify-center font-black text-2xl shadow">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs uppercase text-slate-300 font-bold tracking-wider">Mesa Jugando Actualmente</span>
+                        <h3 id="active-table-display" class="text-xl font-black text-white">Mesa 1</h3>
+                    </div>
+                </div>
+
+                <!-- Gran Contador de Tiempo -->
+                <div class="flex items-center gap-4 bg-black/40 px-6 py-2.5 rounded-2xl border border-white/10">
+                    <div class="text-right">
+                        <span class="text-[10px] uppercase text-slate-400 font-bold tracking-wider block">Tiempo Restante</span>
+                        <div id="game-timer" class="text-3xl md:text-4xl font-black font-mono text-brandGreen tracking-tight">07:00</div>
+                    </div>
+                    <button id="timer-toggle-btn" onclick="toggleTimer()" class="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-all">
+                        <i id="timer-icon" class="fa-solid fa-pause"></i>
+                    </button>
+                </div>
+
+                <!-- Puntuación Actual -->
+                <div class="bg-brandGreen/20 border border-brandGreen/40 px-6 py-2 rounded-2xl text-center">
+                    <span class="text-[10px] uppercase text-brandGreen font-extrabold tracking-wider block">Aciertos</span>
+                    <span id="current-turn-score" class="text-3xl font-black text-white">0</span>
+                </div>
+            </div>
+
+            <!-- Progress Bar del Tiempo -->
+            <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden shadow-inner">
+                <div id="timer-progress-bar" class="bg-brandGreen h-full w-full transition-all duration-1000 ease-linear"></div>
+            </div>
+
+            <!-- TARJETA PRINCIPAL DE MÍMICA -->
+            <div class="bg-white border-2 border-slate-200 rounded-3xl p-6 md:p-12 shadow-xl flex flex-col items-center justify-center text-center relative min-h-[340px] gradient-brand-light">
+                
+                <span id="word-category" class="px-4 py-1.5 bg-brandNavy/10 text-brandNavy font-extrabold text-xs md:text-sm rounded-full mb-4 uppercase tracking-wider border border-brandNavy/20">
+                    Categoría: Gastronomía
+                </span>
+
+                <h2 id="current-word" class="text-3xl md:text-5xl lg:text-6xl font-black text-brandNavy tracking-tight my-4 leading-tight">
+                    Presiona "Comenzar"
+                </h2>
+
+                <p class="text-slate-400 text-xs md:text-sm max-w-md mt-2">
+                    <i class="fa-solid fa-lightbulb text-amber-400 mr-1"></i> No se permite hablar, emitir sonidos ni deletrear. Solo gestos y mímicas corporales.
+                </p>
+
+                <!-- Indicator de Atajos -->
+                <div class="mt-6 flex flex-wrap justify-center gap-3 text-xs text-slate-500 font-medium">
+                    <span class="bg-slate-100 px-2.5 py-1 rounded-md border"><kbd class="font-bold text-slate-700">Enter</kbd> : Siguiente</span>
+                    <span class="bg-slate-100 px-2.5 py-1 rounded-md border"><kbd class="font-bold text-slate-700">Espacio / Right</kbd> : Correcto (+1)</span>
+                    <span class="bg-slate-100 px-2.5 py-1 rounded-md border"><kbd class="font-bold text-slate-700">Left / Down</kbd> : Pasar (0)</span>
+                </div>
+            </div>
+
+            <!-- CONTROLES Y BOTONES DE ACCIÓN -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                
+                <!-- BOTÓN PASAR -->
+                <button onclick="handlePass()" class="py-5 px-6 bg-amber-500 hover:bg-amber-600 text-white font-black text-lg rounded-2xl shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-forward text-2xl"></i>
+                    <div class="text-left">
+                        <span class="block leading-none">PASAR</span>
+                        <span class="text-xs font-normal opacity-80">(0 puntos)</span>
+                    </div>
+                </button>
+
+                <!-- BOTÓN NEXT / ENTER -->
+                <button onclick="handleNextWord()" class="py-5 px-6 bg-brandNavy hover:bg-brandBlue text-white font-black text-lg rounded-2xl shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-rotate text-2xl text-brandGreen"></i>
+                    <div class="text-left">
+                        <span class="block leading-none">ENTER / SIGUIENTE</span>
+                        <span class="text-xs font-normal text-slate-300">(Cambiar Mímica)</span>
+                    </div>
+                </button>
+
+                <!-- BOTÓN CORRECTO -->
+                <button onclick="handleCorrect()" class="py-5 px-6 bg-brandGreen hover:bg-brandGreenHover text-brandNavy font-black text-lg rounded-2xl shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-circle-check text-3xl"></i>
+                    <div class="text-left">
+                        <span class="block leading-none">¡CORRECTO!</span>
+                        <span class="text-xs font-bold opacity-90">(+1 punto)</span>
+                    </div>
+                </button>
+
+            </div>
+
+        </section>
+
+        <!-- ==================== TAB 3: BANCO DE PALABRAS ==================== -->
+        <section id="tab-words" class="hidden flex-col gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-brandNavy flex items-center gap-2">
+                            <i class="fa-solid fa-book-open text-brandGreen"></i>
+                            <span>Banco de Mímicas Venezolanas (+100 Conceptos)</span>
+                        </h3>
+                        <p class="text-xs text-slate-500">Lista completa de expresiones, comida, lugares y cultura venezolana incluidos en el juego.</p>
+                    </div>
+                    <input type="text" id="word-search" oninput="filterWords()" placeholder="Buscar palabra o categoría..." class="px-4 py-2 border border-slate-300 rounded-xl text-sm w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-brandGreen">
+                </div>
+
+                <div id="words-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-[500px] overflow-y-auto p-1">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL DE FIN DE TURNO -->
+    <div id="turn-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full text-center shadow-2xl border-4 border-brandGreen animate-bounce-short">
+            <div class="w-16 h-16 bg-brandGreen/20 text-brandGreen rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                <i class="fa-solid fa-stopwatch"></i>
+            </div>
+            <h3 class="text-2xl font-black text-brandNavy">¡Tiempo Agotado!</h3>
+            <p id="modal-mesa-title" class="text-slate-500 font-bold my-1">Resultado de Mesa 1</p>
+            
+            <div class="my-6 p-4 bg-slate-100 rounded-2xl">
+                <span class="text-xs text-slate-400 font-bold uppercase block">Puntuación Total en 7 min</span>
+                <span id="modal-score-display" class="text-5xl font-black text-brandNavy">0</span>
+                <span class="text-sm font-bold text-brandGreen block mt-1">Aciertos logrados</span>
+            </div>
+
+            <button onclick="closeTurnModal()" class="w-full py-3.5 bg-brandNavy hover:bg-brandBlue text-white font-extrabold rounded-xl shadow-lg transition-all">
+                Continuar al Campeonato <i class="fa-solid fa-arrow-right ml-1"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="w-full bg-brandNavy text-slate-400 py-4 text-center text-xs border-t border-white/10 mt-auto">
+        <p>© 2026 <strong>360NET, C.A. Sucursal Calabozo</strong> - Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+        /* ==========================================================================
+           100+ BANCO DE PALABRAS VENEZOLANAS CON CATEGORÍAS
+           ========================================================================== */
+        const venezuelanWords = [
+            // Gastronomía & Comidas
+            { word: "Arepa con queso de mano", category: "Gastronomía" },
+            { word: "Cachapa con queso y pernil", category: "Gastronomía" },
+            { word: "Hallaca navideña", category: "Gastronomía" },
+            { word: "Pabellón criollo", category: "Gastronomía" },
+            { word: "Papelón con limón", category: "Gastronomía" },
+            { word: "Empanada de cazón", category: "Gastronomía" },
+            { word: "Chicha criolla con canela", category: "Gastronomía" },
+            { word: "Tequeños de queso", category: "Gastronomía" },
+            { word: "Asado negro", category: "Gastronomía" },
+            { word: "Mondoñera / Sancocho", category: "Gastronomía" },
+            { word: "Cocada playera", category: "Gastronomía" },
+            { word: "Golfeado con queso de mano", category: "Gastronomía" },
+            { word: "Majarete", category: "Gastronomía" },
+            { word: "Torta de auyama", category: "Gastronomía" },
+            { word: "Quesillo venezolano", category: "Gastronomía" },
+            { word: "Pan de jamón", category: "Gastronomía" },
+            { word: "Fosforera caribeña", category: "Gastronomía" },
+            { word: "Choripán con guasacaca", category: "Gastronomía" },
+            { word: "Harina P.A.N.", category: "Gastronomía" },
+            { word: "Cerveza Solera Verde", category: "Gastronomía" },
+
+            // Tradiciones, Juegos & Cultura
+            { word: "Toros coleados", category: "Tradición" },
+            { word: "Gaitas zulianas", category: "Tradición" },
+            { word: "El Tamunangue", category: "Tradición" },
+            { word: "Diablos Danzantes de Yare", category: "Tradición" },
+            { word: "Jugar Bolas Criollas", category: "Juego Criollo" },
+            { word: "Elegir la Reina del Carnaval", category: "Tradición" },
+            { word: "Pelea de Gallos", category: "Tradición" },
+            { word: "Trompo y Perinola", category: "Juego Criollo" },
+            { word: "Volar Papagayo", category: "Juego Criollo" },
+            { word: "Margarita y la Virgen del Valle", category: "Tradición" },
+            { word: "Quemar a Judas en Semana Santa", category: "Tradición" },
+            { word: "Parranda de San Pedro", category: "Tradición" },
+            { word: "Joropo recio con zapateo", category: "Música / Baile" },
+
+            // Geografía, Lugares & Fauna
+            { word: "Salto Ángel (Kerepakupai Vená)", category: "Lugar Famoso" },
+            { word: "Los Roques", category: "Lugar Famoso" },
+            { word: "El Ávila / Waraira Repano", category: "Lugar Famoso" },
+            { word: "Médanos de Coro", category: "Lugar Famoso" },
+            { word: "Relámpago del Catatumbo", category: "Fenómeno Natural" },
+            { word: "Puente sobre el Lago de Maracaibo", category: "Lugar Famoso" },
+            { word: "Represa del Guri", category: "Lugar Famoso" },
+            { word: "Chigüire en el río", category: "Fauna" },
+            { word: "Guacamaya volando", category: "Fauna" },
+            { word: "Turpial cantando", category: "Fauna" },
+            { word: "Oso Frontino", category: "Fauna" },
+            { word: "Tonina del Orinoco", category: "Fauna" },
+            { word: "Flor Nacional Araguaney", category: "Símbolo Patrio" },
+
+            // Expresiones & Personajes / Vida Cotidiana
+            { word: "Tomar café guayoyo bien caliente", category: "Vida Cotidiana" },
+            { word: "Hacer una cola para el autobús", category: "Vida Cotidiana" },
+            { word: "Se fue la luz (El apagón)", category: "Vida Cotidiana" },
+            { word: "Un carrito por puesto apurado", category: "Vida Cotidiana" },
+            { word: "El vendedor de cepillados / raspados", category: "Vida Cotidiana" },
+            { word: "El cauchero cambiando un caucho", category: "Vida Cotidiana" },
+            { word: "Echar un piropo en la calle", category: "Vida Cotidiana" },
+            { word: "Bailar Tambor de San Millán", category: "Música / Baile" },
+            { word: "Tocar el Cuatro Venezolano", category: "Instrumento" },
+            { word: "Tocar Maracas", category: "Instrumento" },
+            { word: "Tocar Furruco y Tambora", category: "Instrumento" },
+            { word: "La Llorona asustando", category: "Leyenda" },
+            { word: "El Silbón en la sabana", category: "Leyenda" },
+            { word: "Florentino y el Diablo", category: "Leyenda" },
+            { word: "Comer empanada con malta bien fría", category: "Vida Cotidiana" },
+            { word: "El cobrador del autobús gritando el pasaje", category: "Vida Cotidiana" },
+            { word: "Poner la gaita a todo volumen en diciembre", category: "Vida Cotidiana" },
+            { word: "Sancocho de gallina en el patio", category: "Vida Cotidiana" },
+            { word: "Jugar Dominó y trancar la partida", category: "Juego Criollo" },
+            { word: "Llevar un chisme bien caliente", category: "Expresión" },
+            { word: "Echar un pie en una fiesta", category: "Expresión" },
+            { word: "Estar 'Salado' (Mala suerte)", category: "Expresión" },
+            { word: "Pedir la 'Ñapa' en el abasto", category: "Expresión" },
+            { word: "Comprar un raspado de colita con leche condensada", category: "Gastronomía" },
+            { word: "Bailar la Burriquita", category: "Tradición" },
+            { word: "La Chinita de Maracaibo", category: "Tradición" },
+            { word: "Hacer una sopa en anfe con leña", category: "Vida Cotidiana" },
+            { word: "Un zamuro en un poste", category: "Fauna" },
+            { word: "Iguana cruzando el carro", category: "Fauna" },
+            { word: "Comer cachapas a orilla de carretera", category: "Gastronomía" },
+            { word: "Un mototaxista esquivando el tráfico", category: "Vida Cotidiana" },
+            { word: "El pregonero vendiendo periódico", category: "Vida Cotidiana" },
+            { word: "Cargar una bombona de gas pesado", category: "Vida Cotidiana" },
+            { word: "Pintar la casa antes de Navidad", category: "Tradición" },
+            { word: "Sancocho de pescado en la playa", category: "Gastronomía" },
+            { word: "El Tío Simón cantando Caballo Viejo", category: "Personaje" },
+            { word: "Oscar D'León bailando salsa", category: "Personaje" },
+            { word: "Dr. José Gregorio Hernández", category: "Personaje" },
+            { word: "Un juego de Béisbol Leones vs Magallanes", category: "Deporte" },
+            { word: "Batear un Jonrón con la Vinotinto", category: "Deporte" },
+            { word: "Un juego de Truco gritando ¡Quiero!", category: "Juego Criollo" },
+            { word: "Limpiar la casa con música de fondo", category: "Vida Cotidiana" },
+            { word: "Hacer una parrilla en familia", category: "Vida Cotidiana" },
+            { word: "Echarse un chapuzón en el río", category: "Vida Cotidiana" },
+            { word: "Montar a caballo en el llano", category: "Llano" },
+            { word: "Ordeñar una vaca al amanecer", category: "Llano" },
+            { word: "El Cantaor de contrapunteo", category: "Llano" },
+            { word: "Comer casabe con queso", category: "Gastronomía" },
+            { word: "Tomar chicha de carrito", category: "Gastronomía" },
+            { word: "Un vendedor de plátanos gritando", category: "Vida Cotidiana" },
+            { word: "Celebrar un gol de la Vinotinto", category: "Deporte" },
+            { word: "Bailar Calipso de El Callao", category: "Tradición" },
+            { word: "Comer hallaquitas de chicharrón", category: "Gastronomía" },
+            { word: "El perro caliente con 'todo' y papitas", category: "Gastronomía" },
+            { word: "Bailar el baile del mico", category: "Diversión" },
+            { word: "Un aguacero llanero con truenos", category: "Clima" },
+            { word: "El barbero cortando cabello y echando cuento", category: "Vida Cotidiana" },
+            { word: "Llevar la vianda del almuerzo al trabajo", category: "Vida Cotidiana" },
+            { word: "Ponerse la camiseta de 360NET", category: "Empresa" },
+            { word: "Técnico de 360NET subiendo a la torre de fibra", category: "Empresa" }
+        ];
+
+        /* ==========================================================================
+           ESTADO DEL TORNEO & JUEGO
+           ========================================================================== */
+        let tournamentState = {
+            phase: 'semi', // 'semi', 'final', 'completed'
+            activeMatch: 'm1', // 'm1' (Mesa 1 vs Mesa 2), 'm2' (Mesa 3 vs Mesa 4), 'final'
+            activeTeam: 'mesa1', // 'mesa1', 'mesa2', 'mesa3', 'mesa4', 'final1', 'final2'
+            scores: {
+                mesa1: { semi: null, final: null },
+                mesa2: { semi: null, final: null },
+                mesa3: { semi: null, final: null },
+                mesa4: { semi: null, final: null }
+            },
+            finalists: [null, null],
+            champion: null
+        };
+
+        // Estado del Timer & Turno Actual
+        const TURN_DURATION_SECONDS = 7 * 60; // 7 Minutos = 420 seg
+        let timerInterval = null;
+        let timeRemaining = TURN_DURATION_SECONDS;
+        let isTimerRunning = false;
+        let currentTurnScore = 0;
+        let unusedWords = [...venezuelanWords];
+        let currentWordIndex = -1;
+
+        /* ==========================================================================
+           INICIALIZACIÓN
+           ========================================================================== */
+        window.onload = function() {
+            renderWordBank();
+            updateBracketUI();
+            setupKeyboardShortcuts();
+            shuffleWords();
+        };
+
+        function shuffleWords() {
+            unusedWords = [...venezuelanWords].sort(() => Math.random() - 0.5);
+        }
+
+        function switchTab(tabName) {
+            document.getElementById('tab-bracket').classList.add('hidden');
+            document.getElementById('tab-game').classList.add('hidden');
+            document.getElementById('tab-words').classList.add('hidden');
+
+            document.getElementById('nav-bracket-btn').className = "px-4 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200";
+            document.getElementById('nav-game-btn').className = "px-4 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200";
+            document.getElementById('nav-words-btn').className = "px-4 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200";
+
+            if(tabName === 'bracket') {
+                document.getElementById('tab-bracket').classList.remove('hidden');
+                document.getElementById('nav-bracket-btn').className = "px-4 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 bg-brandNavy text-white shadow-md";
+            } else if(tabName === 'game') {
+                document.getElementById('tab-game').classList.remove('hidden');
+                document.getElementById('nav-game-btn').className = "px-4 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 bg-brandNavy text-white shadow-md";
+            } else if(tabName === 'words') {
+                document.getElementById('tab-words').classList.remove('hidden');
+                document.getElementById('nav-words-btn').className = "px-4 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 bg-brandNavy text-white shadow-md";
+            }
+        }
+
+        function startNextMatchTurn() {
+            // Determine who should play next
+            if (tournamentState.phase === 'semi') {
+                if (tournamentState.scores.mesa1.semi === null) {
+                    setupTurn('mesa1', 'Mesa 1 (Semifinal 1)');
+                } else if (tournamentState.scores.mesa2.semi === null) {
+                    setupTurn('mesa2', 'Mesa 2 (Semifinal 1)');
+                } else if (tournamentState.scores.mesa3.semi === null) {
+                    setupTurn('mesa3', 'Mesa 3 (Semifinal 2)');
+                } else if (tournamentState.scores.mesa4.semi === null) {
+                    setupTurn('mesa4', 'Mesa 4 (Semifinal 2)');
+                }
+            } else if (tournamentState.phase === 'final') {
+                const team1 = tournamentState.finalists[0];
+                const team2 = tournamentState.finalists[1];
+
+                if (tournamentState.scores[team1].final === null) {
+                    setupTurn(team1, `${getTeamName(team1)} (GRAN FINAL)`);
+                } else if (tournamentState.scores[team2].final === null) {
+                    setupTurn(team2, `${getTeamName(team2)} (GRAN FINAL)`);
+                }
+            } else {
+                alert("¡El torneo ha finalizado! Puedes reiniciar para volver a jugar.");
+                return;
+            }
+
+            switchTab('game');
+        }
+
+        function setupTurn(teamKey, displayName) {
+            tournamentState.activeTeam = teamKey;
+            document.getElementById('active-table-display').innerText = displayName;
+            
+            // Reset timer & score
+            currentTurnScore = 0;
+            document.getElementById('current-turn-score').innerText = '0';
+            resetTimer();
+            nextWord();
+            startTimer();
+        }
+
+        function getTeamName(key) {
+            const names = {
+                mesa1: 'Mesa 1',
+                mesa2: 'Mesa 2',
+                mesa3: 'Mesa 3',
+                mesa4: 'Mesa 4'
+            };
+            return names[key] || key;
+        }
+
+        function startTimer() {
+            if (isTimerRunning) return;
+            isTimerRunning = true;
+            document.getElementById('timer-icon').className = 'fa-solid fa-pause';
+
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+
+                if (timeRemaining <= 0) {
+                    endTurn();
+                }
+            }, 1000);
+        }
+
+        function toggleTimer() {
+            if (isTimerRunning) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+                document.getElementById('timer-icon').className = 'fa-solid fa-play';
+            } else {
+                startTimer();
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            timeRemaining = TURN_DURATION_SECONDS;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            const formatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            
+            const timerEl = document.getElementById('game-timer');
+            timerEl.innerText = formatted;
+
+            // Warning style if under 1 minute
+            if (timeRemaining <= 60) {
+                timerEl.classList.add('text-rose-400');
+            } else {
+                timerEl.classList.remove('text-rose-400');
+            }
+
+            // Progress bar
+            const percent = (timeRemaining / TURN_DURATION_SECONDS) * 100;
+            document.getElementById('timer-progress-bar').style.width = `${percent}%`;
+        }
+
+        function nextWord() {
+            if (unusedWords.length === 0) {
+                shuffleWords();
+            }
+            const currentItem = unusedWords.pop();
+            
+            const wordEl = document.getElementById('current-word');
+            const catEl = document.getElementById('word-category');
+
+            // Quick flip animation
+            wordEl.parentElement.classList.add('scale-95', 'opacity-80');
+            setTimeout(() => {
+                wordEl.innerText = currentItem.word;
+                catEl.innerText = `Categoría: ${currentItem.category}`;
+                wordEl.parentElement.classList.remove('scale-95', 'opacity-80');
+            }, 100);
+        }
+
+        function handleCorrect() {
+            currentTurnScore++;
+            document.getElementById('current-turn-score').innerText = currentTurnScore;
+            // Visual feedback
+            flashFeedback('bg-brandGreen/20');
+            nextWord();
+        }
+
+        function handlePass() {
+            flashFeedback('bg-amber-500/20');
+            nextWord();
+        }
+
+        function handleNextWord() {
+            nextWord();
+        }
+
+        function flashFeedback(colorClass) {
+            const container = document.getElementById('current-word').parentElement;
+            container.classList.add(colorClass);
+            setTimeout(() => {
+                container.classList.remove(colorClass);
+            }, 200);
+        }
+
+        function endTurn() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+
+            const activeTeam = tournamentState.activeTeam;
+            const phase = tournamentState.phase;
+
+            // Save Score
+            if (phase === 'semi') {
+                tournamentState.scores[activeTeam].semi = currentTurnScore;
+            } else if (phase === 'final') {
+                tournamentState.scores[activeTeam].final = currentTurnScore;
+            }
+
+            // Show turn finish modal
+            document.getElementById('modal-mesa-title').innerText = `Resultado de ${getTeamName(activeTeam)}`;
+            document.getElementById('modal-score-display').innerText = currentTurnScore;
+            document.getElementById('turn-modal').classList.remove('hidden');
+
+            // Check if phase complete
+            checkPhaseProgress();
+            updateBracketUI();
+        }
+
+        function closeTurnModal() {
+            document.getElementById('turn-modal').classList.add('hidden');
+            switchTab('bracket');
+        }
+
+        function checkPhaseProgress() {
+            const s = tournamentState.scores;
+
+            if (tournamentState.phase === 'semi') {
+                // If semi 1 completed
+                if (s.mesa1.semi !== null && s.mesa2.semi !== null) {
+                    tournamentState.finalists[0] = s.mesa1.semi >= s.mesa2.semi ? 'mesa1' : 'mesa2';
+                }
+                // If semi 2 completed
+                if (s.mesa3.semi !== null && s.mesa4.semi !== null) {
+                    tournamentState.finalists[1] = s.mesa3.semi >= s.mesa4.semi ? 'mesa3' : 'mesa4';
+                }
+
+                // If both semis complete -> advance to Final
+                if (s.mesa1.semi !== null && s.mesa2.semi !== null && s.mesa3.semi !== null && s.mesa4.semi !== null) {
+                    tournamentState.phase = 'final';
+                }
+            } else if (tournamentState.phase === 'final') {
+                const f1 = tournamentState.finalists[0];
+                const f2 = tournamentState.finalists[1];
+
+                if (s[f1].final !== null && s[f2].final !== null) {
+                    tournamentState.phase = 'completed';
+                    tournamentState.champion = s[f1].final >= s[f2].final ? f1 : f2;
+                    
+                    // Celebrate Champion!
+                    setTimeout(() => {
+                        triggerConfetti();
+                    }, 500);
+                }
+            }
+        }
+
+        function updateBracketUI() {
+            const s = tournamentState.scores;
+
+            // Semifinal Scores
+            document.getElementById('score-mesa1').innerText = s.mesa1.semi !== null ? `${s.mesa1.semi} pts` : '0 pts';
+            document.getElementById('score-mesa2').innerText = s.mesa2.semi !== null ? `${s.mesa2.semi} pts` : '0 pts';
+            document.getElementById('score-mesa3').innerText = s.mesa3.semi !== null ? `${s.mesa3.semi} pts` : '0 pts';
+            document.getElementById('score-mesa4').innerText = s.mesa4.semi !== null ? `${s.mesa4.semi} pts` : '0 pts';
+
+            // Highlights Winner of Semi 1
+            if (s.mesa1.semi !== null && s.mesa2.semi !== null) {
+                document.getElementById('m1-status-tag').innerText = "Completado";
+                document.getElementById('m1-status-tag').className = "text-brandGreen font-bold";
+                if (s.mesa1.semi >= s.mesa2.semi) {
+                    document.getElementById('card-mesa1').classList.add('bg-emerald-50', 'border-brandGreen');
+                } else {
+                    document.getElementById('card-mesa2').classList.add('bg-emerald-50', 'border-brandGreen');
+                }
+            }
+
+            // Highlights Winner of Semi 2
+            if (s.mesa3.semi !== null && s.mesa4.semi !== null) {
+                document.getElementById('m2-status-tag').innerText = "Completado";
+                document.getElementById('m2-status-tag').className = "text-brandGreen font-bold";
+                if (s.mesa3.semi >= s.mesa4.semi) {
+                    document.getElementById('card-mesa3').classList.add('bg-emerald-50', 'border-brandGreen');
+                } else {
+                    document.getElementById('card-mesa4').classList.add('bg-emerald-50', 'border-brandGreen');
+                }
+            }
+
+            // Finalists Display
+            if (tournamentState.finalists[0]) {
+                document.getElementById('final-team1-name').innerText = getTeamName(tournamentState.finalists[0]);
+                document.getElementById('final-team1-name').className = "font-bold text-brandNavy flex items-center gap-2";
+                const scoreF1 = s[tournamentState.finalists[0]].final;
+                document.getElementById('score-final1').innerText = scoreF1 !== null ? `${scoreF1} pts` : '0 pts';
+            }
+
+            if (tournamentState.finalists[1]) {
+                document.getElementById('final-team2-name').innerText = getTeamName(tournamentState.finalists[1]);
+                document.getElementById('final-team2-name').className = "font-bold text-brandNavy flex items-center gap-2";
+                const scoreF2 = s[tournamentState.finalists[1]].final;
+                document.getElementById('score-final2').innerText = scoreF2 !== null ? `${scoreF2} pts` : '0 pts';
+            }
+
+            // Champion Display
+            if (tournamentState.champion) {
+                document.getElementById('champion-name').innerText = getTeamName(tournamentState.champion).toUpperCase();
+                document.getElementById('champion-sub').innerText = `¡GANADOR DEL TORNEO 360NET SUCURSAL CALABOZO!`;
+                document.getElementById('current-phase-badge').innerText = "Fase: ¡Campeonato Finalizado!";
+                document.getElementById('start-turn-btn-text').innerText = "TORNEO FINALIZADO";
+            } else if (tournamentState.phase === 'final') {
+                document.getElementById('current-phase-badge').innerText = "Fase: Gran Final";
+                document.getElementById('start-turn-btn-text').innerText = "INICIAR GRAN FINAL";
+            } else {
+                document.getElementById('current-phase-badge').innerText = "Fase: Semifinales";
+                document.getElementById('start-turn-btn-text').innerText = "INICIAR SIGUIENTE TURNO";
+            }
+
+            // Render Table Rows
+            renderScoresTable();
+        }
+
+        function renderScoresTable() {
+            const tbody = document.getElementById('scores-table-body');
+            const teams = ['mesa1', 'mesa2', 'mesa3', 'mesa4'];
+
+            tbody.innerHTML = teams.map(t => {
+                const name = getTeamName(t);
+                const semiScore = tournamentState.scores[t].semi !== null ? `${tournamentState.scores[t].semi} pts` : '<span class="text-slate-300">Pendiente</span>';
+                const finalScore = tournamentState.scores[t].final !== null ? `${tournamentState.scores[t].final} pts` : '<span class="text-slate-300">--</span>';
+                
+                let statusBadge = '<span class="px-2 py-1 bg-slate-100 text-slate-500 rounded text-xs">En espera</span>';
+                if (tournamentState.champion === t) {
+                    statusBadge = '<span class="px-2.5 py-1 bg-amber-400 text-amber-950 rounded-full text-xs font-black">🏆 CAMPEÓN</span>';
+                } else if (tournamentState.finalists.includes(t)) {
+                    statusBadge = '<span class="px-2.5 py-1 bg-blue-100 text-brandNavy rounded-full text-xs font-bold">Finalista</span>';
+                } else if (tournamentState.scores[t].semi !== null) {
+                    statusBadge = '<span class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs">Eliminado</span>';
+                }
+
+                return `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 font-bold text-brandNavy">${name}</td>
+                        <td class="p-3">${semiScore}</td>
+                        <td class="p-3">${finalScore}</td>
+                        <td class="p-3">${statusBadge}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderWordBank(filterText = '') {
+            const grid = document.getElementById('words-grid');
+            const filtered = venezuelanWords.filter(item => 
+                item.word.toLowerCase().includes(filterText.toLowerCase()) || 
+                item.category.toLowerCase().includes(filterText.toLowerCase())
+            );
+
+            grid.innerHTML = filtered.map(item => `
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl hover:border-brandGreen transition-all">
+                    <span class="text-[10px] font-black uppercase tracking-wider text-brandGreen block mb-1">${item.category}</span>
+                    <span class="text-xs font-bold text-brandNavy leading-tight block">${item.word}</span>
+                </div>
+            `).join('');
+        }
+
+        function filterWords() {
+            const val = document.getElementById('word-search').value;
+            renderWordBank(val);
+        }
+
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                // Only trigger if in game tab
+                const gameTab = document.getElementById('tab-game');
+                if (gameTab.classList.contains('hidden')) return;
+
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleNextWord();
+                } else if (e.key === ' ' || e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    handleCorrect();
+                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    handlePass();
+                }
+            });
+        }
+
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 150,
+                    spread: 80,
+                    origin: { y: 0.6 }
+                });
+            }
+        }
+
+        function resetTournament() {
+            if (confirm("¿Estás seguro de que deseas reiniciar todo el torneo de 360NET?")) {
+                tournamentState = {
+                    phase: 'semi',
+                    activeMatch: 'm1',
+                    activeTeam: 'mesa1',
+                    scores: {
+                        mesa1: { semi: null, final: null },
+                        mesa2: { semi: null, final: null },
+                        mesa3: { semi: null, final: null },
+                        mesa4: { semi: null, final: null }
+                    },
+                    finalists: [null, null],
+                    champion: null
+                };
+
+                // Remove highlight classes
+                ['card-mesa1', 'card-mesa2', 'card-mesa3', 'card-mesa4'].forEach(id => {
+                    document.getElementById(id).className = 'flex justify-between items-center p-2 rounded-lg bg-white border border-slate-200 mb-2 font-bold';
+                });
+
+                document.getElementById('m1-status-tag').innerText = 'Pendiente';
+                document.getElementById('m1-status-tag').className = 'text-brandNavy';
+                document.getElementById('m2-status-tag').innerText = 'Pendiente';
+                document.getElementById('m2-status-tag').className = 'text-brandNavy';
+
+                document.getElementById('final-team1-name').innerText = 'Ganador Semifinal 1';
+                document.getElementById('final-team1-name').className = 'text-slate-400 flex items-center gap-2';
+                document.getElementById('final-team2-name').innerText = 'Ganador Semifinal 2';
+                document.getElementById('final-team2-name').className = 'text-slate-400 flex items-center gap-2';
+                
+                document.getElementById('score-final1').innerText = '--';
+                document.getElementById('score-final2').innerText = '--';
+                document.getElementById('champion-name').innerText = '¿Quién Ganará?';
+
+                shuffleWords();
+                updateBracketUI();
+                switchTab('bracket');
+            }
+        }
+    </script>
+</body>
+</html>
