@@ -38,7 +38,7 @@ export default function MimicasPage() {
             <i className="fa-solid fa-masks-theater text-brand-green" /> Torneo de Mímicas 360NET
           </h2>
           <button
-            onClick={() => window.open(`${import.meta.env.BASE_URL}mimicas/display`, '_blank', 'noopener')}
+            onClick={() => window.open('#/mimicas/display', '_blank', 'noopener')}
             className="bg-brand-navy hover:bg-brand-navy-light text-white px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-slate-700"
           >
             <span>📺</span>

@@ -121,7 +121,7 @@ export default function TriviaPage() {
           </h2>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => window.open(`${import.meta.env.BASE_URL}trivia/display`, '_blank', 'noopener')}
+              onClick={() => window.open('#/trivia/display', '_blank', 'noopener')}
               className="bg-brand-navy hover:bg-brand-navy-light text-white px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-slate-700"
             >
               <span>📺</span>

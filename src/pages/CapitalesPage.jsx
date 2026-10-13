@@ -36,7 +36,7 @@ export default function CapitalesPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() =>
-              window.open(`${import.meta.env.BASE_URL}capitales/display`, '_blank', 'noopener')
+              window.open('#/capitales/display', '_blank', 'noopener')
             }
             className="px-3 py-2.5 rounded-xl bg-brand-navy hover:bg-brand-navy-light transition text-white border border-slate-700 text-xs font-bold flex items-center gap-2"
           >
