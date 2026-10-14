@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useTables } from '../context/TablesContext.jsx'
 import { useSound } from '../hooks/useSound.js'
 import { useGameBroadcast } from '../lib/sync.js'
@@ -19,6 +19,24 @@ export default function TradicionalPage() {
   const matchesCount = ((tables.length * (tables.length - 1)) / 2) * ROUNDS_PER_PAIR
   const roundsEach = Math.max(tables.length - 1, 0) * ROUNDS_PER_PAIR
 
+  const { addMatchPoint, currentMatch, phase } = game
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (phase !== 'playing' || !currentMatch) return
+      const key = e.key.toLowerCase()
+      if (key === 'a') {
+        e.preventDefault()
+        addMatchPoint(currentMatch.table1, 1)
+      } else if (key === 'd') {
+        e.preventDefault()
+        addMatchPoint(currentMatch.table2, 1)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [phase, currentMatch, addMatchPoint])
+
   useGameBroadcast('incret-tradicional-display', {
     ready: true,
     phase: game.phase,
@@ -28,14 +46,15 @@ export default function TradicionalPage() {
       ? {
           game: game.currentMatch.game,
           table1: nameOf(game.currentMatch.table1),
+          table1Id: game.currentMatch.table1,
           table2: nameOf(game.currentMatch.table2),
+          table2Id: game.currentMatch.table2,
           status: game.currentMatch.status,
           winner: game.currentMatch.winner ? nameOf(game.currentMatch.winner) : null,
           tie: game.currentMatch.tie,
         }
       : null,
-    matchPhase: game.matchPhase,
-    rolling: game.rolling,
+    matchPoints: game.matchPoints,
     ranking: game.ranking,
     finished: game.phase === 'finished',
     champion: game.champion
@@ -50,11 +69,40 @@ export default function TradicionalPage() {
       : null,
   })
 
+  const ScoreControl = ({ tableId, name, keyHint }) => (
+    <div className="flex flex-col items-center gap-2 bg-white rounded-2xl border-2 border-slate-200 p-4 shadow-sm">
+      <p className="font-black text-brand-navy text-lg leading-tight text-center">{name}</p>
+      <p className="font-outfit font-black text-5xl text-brand-green leading-none tabular-nums">
+        {game.matchPoints[tableId] ?? 0}
+      </p>
+      <div className="flex items-center gap-2 mt-1">
+        <button
+          onClick={() => addMatchPoint(tableId, -1)}
+          disabled={(game.matchPoints[tableId] ?? 0) <= 0}
+          className="w-11 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-xl transition disabled:opacity-30 disabled:cursor-not-allowed"
+          title="Restar punto"
+        >
+          −
+        </button>
+        <button
+          onClick={() => addMatchPoint(tableId, 1)}
+          className="px-6 h-11 rounded-xl bg-brand-green hover:brightness-95 text-white font-black text-xl transition shadow-md"
+          title={`Sumar punto a ${name}`}
+        >
+          +1
+        </button>
+      </div>
+      <kbd className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+        tecla {keyHint}
+      </kbd>
+    </div>
+  )
+
   return (
     <div className="flex-1 w-full bg-brand-bg text-brand-navy">
       <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 pt-5 flex items-center justify-between gap-3 flex-wrap">
         <h2 className="font-outfit font-black text-lg md:text-xl tracking-wide text-brand-navy flex items-center gap-2">
-          <span className="text-2xl">🪀</span> TORNEO DE JUEGOS TRADICIONALES
+          <span className="text-2xl">🪀</span> TORNEO DE PERINOLA
         </h2>
         <div className="flex items-center gap-2">
           <button
@@ -81,12 +129,12 @@ export default function TradicionalPage() {
           <section className="glass-panel rounded-3xl p-6 sm:p-10 max-w-2xl w-full text-center shadow-2xl border border-amber-300/40">
             <div className="text-6xl mb-4">🪀</div>
             <h3 className="font-outfit text-3xl sm:text-4xl font-extrabold mb-3">
-              Mini-Torneo de Juegos Tradicionales
+              Torneo de Perinola
             </h3>
             <p className="text-slate-600 text-sm max-w-lg mx-auto mb-8 leading-relaxed">
-              Las mesas se enfrentan al azar, <strong>todas contra todas</strong> y a{' '}
-              <strong>{ROUNDS_PER_PAIR} vueltas</strong>, en juegos tradicionales venezolanos. Gana
-              la mesa con más puntos.
+              Las mesas se enfrentan <strong>todas contra todas</strong> a{' '}
+              <strong>{ROUNDS_PER_PAIR} vueltas</strong> en partidas de Perinola. Los puntos se
+              suman al <strong>marcador general</strong> compartido con los demás juegos.
             </p>
 
             <div className="grid grid-cols-2 gap-4 max-w-md mx-auto mb-8">
@@ -113,7 +161,8 @@ export default function TradicionalPage() {
 
             <p className="text-xs text-slate-500 mb-6">
               Cada mesa juega <strong>{roundsEach}</strong> partido{roundsEach === 1 ? '' : 's'}.
-              Victoria: <strong>+10 pts</strong> · Empate: <strong>+5 pts</strong>.
+              Victoria: <strong>+10 pts</strong> · Empate: <strong>+5 pts</strong> al marcador
+              general.
             </p>
 
             <button
@@ -146,74 +195,63 @@ export default function TradicionalPage() {
                 </button>
               </div>
 
-              <MatchCard
-                match={game.currentMatch}
-                nameOf={nameOf}
-                revealed={game.matchPhase === 'playing'}
-                rolling={game.rolling}
-              />
+              <MatchCard match={game.currentMatch} nameOf={nameOf} points={game.matchPoints} />
 
-              {game.matchPhase === 'reveal' ? (
+              <div className="grid grid-cols-2 gap-3">
+                <ScoreControl
+                  tableId={game.currentMatch.table1}
+                  name={nameOf(game.currentMatch.table1)}
+                  keyHint="A"
+                />
+                <ScoreControl
+                  tableId={game.currentMatch.table2}
+                  name={nameOf(game.currentMatch.table2)}
+                  keyHint="D"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={game.revealGame}
-                  disabled={game.rolling}
-                  className="w-full py-5 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 font-outfit font-black text-lg shadow-xl hover:scale-105 active:scale-95 transition disabled:opacity-70 disabled:hover:scale-100 flex items-center justify-center gap-3"
+                  onClick={() => game.applyResult(game.currentMatch.table1)}
+                  className="px-4 py-5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-outfit font-black text-base shadow-md transition flex flex-col items-center gap-1"
                 >
-                  {game.rolling ? (
-                    <>
-                      <span className="text-2xl animate-spin">🎲</span>
-                      Sorteando juego…
-                    </>
-                  ) : (
-                    <>🎲 Sortear Juego</>
-                  )}
+                  <span className="text-xs uppercase opacity-90">Gana</span>
+                  <span className="text-lg leading-tight text-center">
+                    {nameOf(game.currentMatch.table1)}
+                  </span>
                 </button>
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      onClick={() => game.applyResult(game.currentMatch.table1)}
-                      className="px-4 py-5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-outfit font-black text-base shadow-md transition flex flex-col items-center gap-1"
-                    >
-                      <span className="text-xs uppercase opacity-90">Gana</span>
-                      <span className="text-lg leading-tight text-center">
-                        {nameOf(game.currentMatch.table1)}
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => game.applyResult(game.currentMatch.table2)}
-                      className="px-4 py-5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-outfit font-black text-base shadow-md transition flex flex-col items-center gap-1"
-                    >
-                      <span className="text-xs uppercase opacity-90">Gana</span>
-                      <span className="text-lg leading-tight text-center">
-                        {nameOf(game.currentMatch.table2)}
-                      </span>
-                    </button>
-                  </div>
+                <button
+                  onClick={() => game.applyResult(game.currentMatch.table2)}
+                  className="px-4 py-5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-outfit font-black text-base shadow-md transition flex flex-col items-center gap-1"
+                >
+                  <span className="text-xs uppercase opacity-90">Gana</span>
+                  <span className="text-lg leading-tight text-center">
+                    {nameOf(game.currentMatch.table2)}
+                  </span>
+                </button>
+              </div>
 
-                  <div className="flex items-center justify-center gap-3">
-                    <button
-                      onClick={() => game.applyResult('tie')}
-                      className="px-5 py-3 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-700 font-bold text-sm border border-amber-300 transition"
-                    >
-                      🤝 Empate (+5 c/u)
-                    </button>
-                    <button
-                      onClick={() => game.applyResult('skip')}
-                      className="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm border border-slate-200 transition"
-                    >
-                      ⏭️ Saltar partido
-                    </button>
-                  </div>
-                </>
-              )}
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  onClick={() => game.applyResult('tie')}
+                  className="px-5 py-3 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-700 font-bold text-sm border border-amber-300 transition"
+                >
+                  🤝 Empate (+5 c/u)
+                </button>
+                <button
+                  onClick={() => game.applyResult('skip')}
+                  className="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm border border-slate-200 transition"
+                >
+                  ⏭️ Saltar partido
+                </button>
+              </div>
             </div>
 
             <div className="lg:col-span-5 bg-white rounded-3xl border-2 border-slate-200 p-5 shadow-sm">
               <PositionTable ranking={game.ranking} />
               <div className="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500">
                 <p className="font-semibold mb-1">Juego del torneo</p>
-                <p>🎲 La Perinola</p>
+                <p>🪀 La Perinola</p>
               </div>
             </div>
           </section>
@@ -225,7 +263,7 @@ export default function TradicionalPage() {
             <h3 className="font-outfit text-3xl sm:text-4xl font-extrabold mb-2">
               ¡Torneo Completado!
             </h3>
-            <p className="text-slate-500 text-sm mb-6">Mesa campeona</p>
+            <p className="text-slate-500 text-sm mb-6">Líder del marcador general</p>
             <p className="font-outfit font-black text-4xl text-brand-green mb-8">
               {game.champion?.name}
             </p>
@@ -245,7 +283,7 @@ export default function TradicionalPage() {
                 onClick={game.startTournament}
                 className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 font-outfit font-black text-base shadow-xl hover:scale-105 active:scale-95 transition"
               >
-                ⚡ Torneo Rápido (nuevo sorteo)
+                ⚡ Torneo Rápido
               </button>
             </div>
           </section>

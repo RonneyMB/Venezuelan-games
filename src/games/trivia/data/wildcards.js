@@ -3,9 +3,9 @@
 export const WILDCARD_TYPES = [
   {
     type: 'song',
-    title: 'Completar la Canción',
+    title: 'Adivina la Canción',
     emoji: '🎵',
-    description: 'Identifica la canción venezolana a partir de su verso.',
+    description: 'Se reproduce una canción y la mesa debe adivinarla.',
   },
   {
     type: 'saying',
@@ -27,49 +27,9 @@ export const WILDCARD_TYPES = [
   },
 ]
 
-// 🎵 Canciones venezolanas: fragmento -> título correcto
-export const WILDCARD_SONGS = [
-  {
-    fragment: '"Yo nací en esta ribera del Arauca vibrador..."',
-    options: ['Alma Llanera', 'Caballo Viejo', 'Moliendo Café', 'El Becerrito'],
-    correct: 0,
-  },
-  {
-    fragment: '"Cuando el amor llega así de esta manera, uno no se da ni cuenta..."',
-    options: ['El Becerrito', 'Caballo Viejo', 'Mi Burrito Sabanero', 'Ansiedad'],
-    correct: 1,
-  },
-  {
-    fragment: '"Cuando la tarde languidece, renacen las sombras..."',
-    options: ['Luna de Margarita', 'Moliendo Café', 'Alma Llanera', 'Tonada de Luna Llena'],
-    correct: 1,
-  },
-  {
-    fragment: '"La vaca Mariposa tuvo un terné, un becerrito lindo como un bebé..."',
-    options: ['El Becerrito', 'Mi Burrito Sabanero', 'Caballo Viejo', 'Pajarillo'],
-    correct: 0,
-  },
-  {
-    fragment: '"Con mi burrito sabanero voy camino de Belén..."',
-    options: ['El Becerrito', 'Mi Burrito Sabanero', 'La Grey Zuliana', 'Tonada de Luna Llena'],
-    correct: 1,
-  },
-  {
-    fragment: '"Ansiedad de tenerte en mis brazos, musitando palabras de amor..."',
-    options: ['Ansiedad', 'Luna de Margarita', 'Moliendo Café', 'Alma Llanera'],
-    correct: 0,
-  },
-  {
-    fragment: '"Tonada de luna llena, canta con tu melodía..."',
-    options: ['Tonada de Luna Llena', 'Luna de Margarita', 'Alma Llanera', 'El Becerrito'],
-    correct: 0,
-  },
-  {
-    fragment: '"De la selva y la montaña, del llano y de la laguna..."',
-    options: ['La Grey Zuliana', 'Alma Llanera', 'Venezuela', 'Moliendo Café'],
-    correct: 1,
-  },
-]
+// Mini-juegos que se ejecutan manualmente (fuera del sistema).
+// El sistema solo muestra la consigna y espera el resultado del administrador.
+export const MANUAL_WILDCARD_TYPES = ['song', 'traditional']
 
 // 📜 Refranes venezolanos: primera mitad -> complemento correcto
 export const WILDCARD_SAYINGS = [
@@ -205,17 +165,42 @@ export const WILDCARD_TRADITIONAL_GAMES = [
     description:
       'La mesa debe hacer girar la perinola sobre la mesa. Para superarlo, debe caer en "Toma todas" o "Toma 2".',
   },
+  {
+    name: 'El Ula Ula',
+    emoji: '⭕',
+    description:
+      'La mesa debe mantener el ula ula girando sin que se caiga durante toda la canción. Para superarlo, debe completar la canción.',
+  },
+  {
+    name: 'El Jojo / El Yoyo',
+    emoji: '🪀',
+    description:
+      'La mesa debe realizar alzadas con el jojo o el yoyo sin dejar que se caiga. Para superarlo, debe completar las alzadas acordadas.',
+  },
 ]
 
+// Elige el tipo de mini-juego al azar, evitando repetir el anterior.
+export function pickWildcardType(prevType = null) {
+  let pool = WILDCARD_TYPES.map((t) => t.type)
+
+  if (prevType && pool.length > 1) {
+    const filtered = pool.filter((t) => t !== prevType)
+    if (filtered.length > 0) pool = filtered
+  }
+
+  return pool[Math.floor(Math.random() * pool.length)]
+}
+
 export function pickWildcard(type, usedRef) {
+  // Los mini-juegos manuales no tienen contenido: se ejecutan fuera del sistema.
+  if (type === 'song') return null
+
   const pool =
-    type === 'song'
-      ? WILDCARD_SONGS
-      : type === 'saying'
-        ? WILDCARD_SAYINGS
-        : type === 'traditional'
-          ? WILDCARD_TRADITIONAL_GAMES
-          : WILDCARD_TRUE_FALSE
+    type === 'saying'
+      ? WILDCARD_SAYINGS
+      : type === 'traditional'
+        ? WILDCARD_TRADITIONAL_GAMES
+        : WILDCARD_TRUE_FALSE
 
   const used = usedRef.current[type] ?? []
   let available = pool.filter((item) => !used.includes(item))

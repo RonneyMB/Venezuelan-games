@@ -21,9 +21,11 @@ export default function TriviaPage() {
   const game = useTriviaGame(tables, play)
 
   const {
-    queue,
-    currentIndex,
     currentQuestion: q,
+    answeredCount,
+    turnCount,
+    totalTurnos,
+    timedOut,
     scores,
     activeTable,
     selected,
@@ -48,7 +50,7 @@ export default function TriviaPage() {
     wildcardResult,
     openWildcard,
     cancelWildcard,
-    selectWildcardGame,
+    startWildcardGame,
     answerWildcard,
     finishWildcard,
   } = game
@@ -63,8 +65,10 @@ export default function TriviaPage() {
 
   useGameBroadcast('incret-trivia-display', {
     ready: true,
-    totalQuestions: queue.length,
-    currentIndex,
+    totalTurnos,
+    turnCount,
+    answeredCount,
+    timedOut,
     category: q?.category ?? '',
     question: q?.question ?? '',
     options: q?.options ?? [],
@@ -83,18 +87,19 @@ export default function TriviaPage() {
     wildcardResult,
   })
 
+  // En tiempo agotado la pregunta vuelve al mazo, así que no se revela la respuesta.
   let explanation = null
   if (answered && q) {
-    if (selected === q.correct) {
-      explanation = {
-        success: true,
-        title: `¡Excelente respuesta de ${activeTableName}! (+10 pts)`,
-        text: q.explanation,
-      }
-    } else if (selected === null) {
+    if (timedOut) {
       explanation = {
         success: false,
         title: `¡Tiempo agotado para ${activeTableName}!`,
+        text: 'La pregunta no fue respondida y regresa al mazo para volver a salir.',
+      }
+    } else if (selected === q.correct) {
+      explanation = {
+        success: true,
+        title: `¡Excelente respuesta de ${activeTableName}! (+10 pts)`,
         text: q.explanation,
       }
     } else {
@@ -107,7 +112,11 @@ export default function TriviaPage() {
   }
 
   const confirmRestart = () => {
-    if (window.confirm('¿Deseas reiniciar la trivia y los puntajes de las mesas?')) {
+    if (
+      window.confirm(
+        '¿Deseas reiniciar la trivia (preguntas y turnos)? El marcador general NO se borra.',
+      )
+    ) {
       restart()
     }
   }
@@ -169,7 +178,7 @@ export default function TriviaPage() {
                 <i className="fa-solid fa-layer-group" /> {q?.category}
               </span>
               <span className="text-xs text-slate-300 font-medium">
-                Pregunta {currentIndex + 1}/{queue.length}
+                Ronda {Math.min(turnCount, totalTurnos)}/{totalTurnos}
               </span>
             </div>
             <TimerBar timeLeft={timeLeft} total={QUESTION_TIME} phase={answered ? 'answering' : phase} />
@@ -270,7 +279,7 @@ export default function TriviaPage() {
         phase={wildcardPhase}
         current={currentWildcard}
         result={wildcardResult}
-        onSelectGame={selectWildcardGame}
+        onStart={startWildcardGame}
         onAnswer={answerWildcard}
         onFinish={finishWildcard}
         onCancel={cancelWildcard}

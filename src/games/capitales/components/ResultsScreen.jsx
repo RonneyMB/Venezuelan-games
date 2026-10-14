@@ -1,31 +1,35 @@
-export default function ResultsScreen({ score, total, totalAttempts, elapsed, onPlayAgain }) {
-  const accuracy = totalAttempts > 0 ? Math.round((score / totalAttempts) * 100) : 100
+const MEDALS = ['🥇', '🥈', '🥉']
 
+export default function ResultsScreen({ ranking, leader, onPlayAgain }) {
   return (
-    <section className="glass-panel rounded-3xl p-6 sm:p-10 text-center max-w-xl w-full my-auto shadow-2xl border border-amber-300/40">
+    <section className="glass-panel rounded-3xl p-6 sm:p-10 text-center max-w-2xl w-full my-auto shadow-2xl border border-amber-300/40">
       <div className="text-6xl mb-3">🏆</div>
       <h2 className="font-outfit text-3xl sm:text-4xl font-extrabold text-brand-navy mb-2">
-        ¡Desafío Completado!
+        ¡Partida Completada!
       </h2>
       <p className="text-slate-600 text-sm mb-6">
-        Demostraste tu conocimiento sobre la geografía venezolana.
+        Líder actual:{' '}
+        <strong className="text-brand-green">{leader?.score > 0 ? leader.name : '—'}</strong>
       </p>
 
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200">
-          <span className="text-[10px] text-slate-500 uppercase font-bold">Aciertos</span>
-          <div className="font-outfit font-black text-2xl text-emerald-600 my-1">
-            {score} / {total}
+      <div className="mb-6 text-left">
+        <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 mb-3 text-center">
+          Marcador general acumulado
+        </h3>
+        {ranking.map((r, i) => (
+          <div
+            key={r.id}
+            className={`flex items-center justify-between px-5 py-3 rounded-2xl border-2 mb-2 ${
+              i === 0 && r.score > 0 ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-white'
+            }`}
+          >
+            <span className="flex items-center gap-3 font-bold text-brand-navy">
+              <span className="text-lg">{MEDALS[i] ?? `#${i + 1}`}</span>
+              {r.name}
+            </span>
+            <span className="font-black text-brand-navy text-xl">{r.score} pts</span>
           </div>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-slate-200">
-          <span className="text-[10px] text-slate-500 uppercase font-bold">Precisión</span>
-          <div className="font-outfit font-black text-2xl text-amber-600 my-1">{accuracy}%</div>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-slate-200">
-          <span className="text-[10px] text-slate-500 uppercase font-bold">Tiempo</span>
-          <div className="font-outfit font-black text-2xl text-sky-600 my-1">{elapsed}s</div>
-        </div>
+        ))}
       </div>
 
       <button

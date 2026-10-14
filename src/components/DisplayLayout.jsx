@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 
 export function WaitingForHost({ title = 'Esperando conexión con el anfitrión…' }) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-6 text-center p-12">
-      <i className="fa-solid fa-tv text-brand-green text-[clamp(4rem,8vw,8rem)] animate-pulse" />
-      <h2 className="text-[clamp(2rem,4vw,4rem)] font-black text-brand-navy">{title}</h2>
-      <p className="text-xl text-slate-500 max-w-2xl">
+    <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-4 lg:gap-6 text-center p-6 lg:p-12 overflow-hidden">
+      <i className="fa-solid fa-tv text-brand-green text-[clamp(3rem,min(8vw,14vh),7rem)] animate-pulse" />
+      <h2 className="text-[clamp(1.5rem,min(4vw,7vh),3.4rem)] font-black text-brand-navy">{title}</h2>
+      <p className="text-base lg:text-xl text-slate-500 max-w-2xl">
         Abre la pantalla desde el panel de gestión del juego con el botón{' '}
         <strong>📺 Abrir Pantalla</strong>.
       </p>
@@ -32,7 +32,7 @@ export default function DisplayLayout({ children }) {
 
   return (
     <div className="h-screen overflow-hidden flex flex-col bg-brand-bg text-brand-navy relative">
-      <main className="flex-1 flex flex-col overflow-hidden min-h-0">{children}</main>
+      <main className="flex-1 min-h-0 w-full min-w-0 flex flex-col overflow-hidden">{children}</main>
 
       <button
         onClick={toggleFullscreen}

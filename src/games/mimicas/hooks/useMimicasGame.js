@@ -2,14 +2,18 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { VENEZUELAN_WORDS } from '../data/words.js'
 import { useTimer } from '../../../hooks/useTimer.js'
 import { useConfetti } from '../../../hooks/useConfetti.js'
+import { useGlobalScore } from '../../../context/GlobalScoreContext.jsx'
 
 export const TURN_DURATION = 7 * 60
 
 const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5)
 
 export function useMimicasGame(tables) {
+  const { totals, addPoints } = useGlobalScore()
   const [tab, setTab] = useState('ranking')
-  const [scores, setScores] = useState(() => Object.fromEntries(tables.map((t) => [t.id, null])))
+  const [played, setPlayed] = useState(() =>
+    Object.fromEntries(tables.map((t) => [t.id, false])),
+  )
   const [currentTable, setCurrentTable] = useState(null)
   const [currentTurnScore, setCurrentTurnScore] = useState(0)
   const [currentWord, setCurrentWord] = useState(null)
@@ -53,18 +57,18 @@ export function useMimicasGame(tables) {
     timerPause()
     if (!currentTable) return
     const allPlayed = tablesRef.current.every(
-      (t) => t.id === currentTable || scores[t.id] !== null,
+      (t) => t.id === currentTable || played[t.id],
     )
-    setScores((prev) => ({ ...prev, [currentTable]: currentTurnScore }))
+    setPlayed((prev) => ({ ...prev, [currentTable]: true }))
     setLastTurn({ tableId: currentTable, score: currentTurnScore })
     if (allPlayed) setFinished(true)
     setModalOpen(true)
-  }, [timerPause, currentTable, currentTurnScore, scores])
+  }, [timerPause, currentTable, currentTurnScore, played])
 
   endTurnRef.current = endTurn
 
   const startNextTurn = useCallback(() => {
-    const next = tablesRef.current.find((t) => scores[t.id] === null)
+    const next = tablesRef.current.find((t) => !played[t.id])
     if (!next) {
       setTab('ranking')
       return
@@ -74,13 +78,14 @@ export function useMimicasGame(tables) {
     setTab('game')
     nextWord()
     timerStart(TURN_DURATION)
-  }, [scores, nextWord, timerStart])
+  }, [played, nextWord, timerStart])
 
   const handleCorrect = useCallback(() => {
     setCurrentTurnScore((s) => s + 1)
+    if (currentTable) addPoints(currentTable, 1)
     flash('green')
     nextWord()
-  }, [flash, nextWord])
+  }, [flash, nextWord, currentTable, addPoints])
 
   const handlePass = useCallback(() => {
     flash('amber')
@@ -101,8 +106,13 @@ export function useMimicasGame(tables) {
   }, [])
 
   const resetTournament = useCallback(() => {
-    if (!window.confirm('¿Estás seguro de que deseas reiniciar todo el torneo de 360NET?')) return
-    setScores(Object.fromEntries(tablesRef.current.map((t) => [t.id, null])))
+    if (
+      !window.confirm(
+        '¿Reiniciar el torneo de mímicas (turnos y palabras)? El marcador general NO se borra.',
+      )
+    )
+      return
+    setPlayed(Object.fromEntries(tablesRef.current.map((t) => [t.id, false])))
     setCurrentTable(null)
     setCurrentTurnScore(0)
     setCurrentWord(null)
@@ -115,13 +125,18 @@ export function useMimicasGame(tables) {
   }, [timerReset])
 
   const ranking = tables
-    .map((t) => ({ id: t.id, name: t.name, score: scores[t.id] }))
-    .sort((a, b) => (b.score ?? -1) - (a.score ?? -1))
+    .map((t) => ({
+      id: t.id,
+      name: t.name,
+      score: totals[t.id] ?? 0,
+      played: Boolean(played[t.id]),
+    }))
+    .sort((a, b) => b.score - a.score)
 
   const idsKey = tables.map((t) => t.id).join('|')
 
   useEffect(() => {
-    setScores(Object.fromEntries(tablesRef.current.map((t) => [t.id, null])))
+    setPlayed(Object.fromEntries(tablesRef.current.map((t) => [t.id, false])))
     setCurrentTable(null)
     setCurrentTurnScore(0)
     setCurrentWord(null)
@@ -163,7 +178,7 @@ export function useMimicasGame(tables) {
   return {
     tab,
     setTab,
-    scores,
+    scores: totals,
     ranking,
     champion,
     currentTable,

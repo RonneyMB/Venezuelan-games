@@ -14,10 +14,15 @@ Aplicación de escritorio para Windows de juegos para eventos y dinámicas: **Tr
 
 ## Juegos incluidos
 
-- **Trivia** — preguntas con sistema de proyección en pantalla.
-- **Mímicas** — juego de actuación por equipos.
-- **Capitales de Venezuela** — quiz de capitales por estado.
-- **Tradicional** — juegos clásicos (Perinola y trivia).
+Todos los juegos suman a un **marcador general** compartido por mesa que se acumula en vivo entre
+partidas. El ganador de cada juego es el líder del acumulado general.
+
+- **Trivia** — preguntas por mesa con sistema de proyección en pantalla.
+- **Mímicas** — juego de actuación por equipos; cada acierto suma al acumulado.
+- **Capitales de Venezuela** — las mesas responden por velocidad y el administrador suma +10 manual.
+- **Tradicional** — torneo de Perinola con marcador en vivo.
+
+El marcador general se reinicia desde el menú principal ("Reiniciar marcador general").
 
 ## Desarrollo
 

@@ -17,7 +17,7 @@ export default function MimicasPage() {
 
   useGameBroadcast('incret-mimicas-display', {
     ready: true,
-    ranking: game.ranking.map((r) => ({ id: r.id, name: r.name, score: r.score })),
+    ranking: game.ranking.map((r) => ({ id: r.id, name: r.name, score: r.score, played: r.played })),
     champion: game.champion
       ? { id: game.champion.id, name: game.champion.name, score: game.champion.score }
       : null,

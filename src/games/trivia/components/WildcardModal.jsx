@@ -3,6 +3,8 @@ import { WILDCARD_TYPES } from '../data/wildcards.js'
 
 const SUSPENSE_EMOJIS = ['🎲', '🌀', '🪀']
 
+const TYPE_META = Object.fromEntries(WILDCARD_TYPES.map((t) => [t.type, t]))
+
 function SuspenseView() {
   const [cycle, setCycle] = useState(0)
 
@@ -34,25 +36,6 @@ function SuspenseView() {
   )
 }
 
-const CARD_STYLES = {
-  song: {
-    gradient: 'bg-gradient-to-br from-fuchsia-500 via-purple-500 to-indigo-600',
-    glow: 'shadow-purple-500/40',
-  },
-  saying: {
-    gradient: 'bg-gradient-to-br from-amber-400 via-orange-500 to-red-500',
-    glow: 'shadow-orange-500/40',
-  },
-  truefalse: {
-    gradient: 'bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600',
-    glow: 'shadow-teal-500/40',
-  },
-  traditional: {
-    gradient: 'bg-gradient-to-br from-rose-400 via-pink-500 to-purple-600',
-    glow: 'shadow-pink-500/40',
-  },
-}
-
 function ModalHeader({ emoji, title, subtitle }) {
   return (
     <div className="text-center space-y-2">
@@ -65,59 +48,67 @@ function ModalHeader({ emoji, title, subtitle }) {
   )
 }
 
-function SelectView({ onSelect, onCancel }) {
+function ReadyView({ current, onStart, onCancel }) {
+  const meta = TYPE_META[current.type] ?? {}
+  const title = current.type === 'traditional' ? current.data?.name : meta.title
+
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <div className="w-20 h-20 rounded-3xl bg-amber-100 text-amber-500 flex items-center justify-center text-5xl mx-auto animate-sparkle">
-          🃏
-        </div>
-        <h3 className="text-2xl sm:text-3xl font-black text-brand-navy">Usar Comodín</h3>
-        <p className="text-sm text-slate-500 max-w-md mx-auto">
-          La mesa no puede responder. Elige un mini-juego: si lo ganas, sumas{' '}
-          <strong className="text-brand-green">+5 pts</strong>.
+    <div className="space-y-6 text-center">
+      <div className="text-7xl animate-float">{meta.emoji}</div>
+
+      <div>
+        <p className="text-xs uppercase font-bold tracking-widest text-brand-green mb-1">
+          El sistema sorteó este reto
         </p>
+        <h3 className="text-2xl sm:text-3xl font-black text-brand-navy break-words">{title}</h3>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {WILDCARD_TYPES.map((item, index) => {
-          const style = CARD_STYLES[item.type] ?? CARD_STYLES.song
-          return (
-            <button
-              key={item.type}
-              onClick={() => onSelect(item.type)}
-              style={{ animationDelay: `${index * 0.1}s` }}
-              className={`group relative overflow-hidden rounded-3xl p-6 text-white text-center shadow-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl animate-card-in ${style.gradient} ${style.glow}`}
-            >
-              <div className="absolute -right-3 -top-6 text-white/15 text-8xl rotate-12 pointer-events-none select-none">
-                {item.emoji}
-              </div>
+      {current.type === 'traditional' && (
+        <div className="bg-gradient-to-br from-rose-50 to-pink-50 border-2 border-pink-200 rounded-3xl p-5">
+          <p className="text-sm text-slate-600 leading-relaxed">{current.data?.description}</p>
+        </div>
+      )}
 
-              <div className="relative z-10 flex flex-col items-center gap-3">
-                <span
-                  className="text-5xl animate-float"
-                  style={{ animationDelay: `${index * 0.3}s` }}
-                >
-                  {item.emoji}
-                </span>
-                <h4 className="text-lg font-black leading-tight">{item.title}</h4>
-                <p className="text-xs text-white/85 leading-relaxed min-h-[48px]">
-                  {item.description}
-                </p>
-                <span className="mt-1 inline-flex items-center gap-2 bg-white/20 group-hover:bg-white/30 px-4 py-2 rounded-full text-xs font-bold backdrop-blur transition">
-                  Jugar <i className="fa-solid fa-arrow-right" />
-                </span>
-              </div>
-            </button>
-          )
-        })}
+      {current.type === 'song' && (
+        <div className="bg-gradient-to-br from-fuchsia-50 to-indigo-50 border-2 border-fuchsia-200 rounded-3xl p-5">
+          <p className="text-sm text-slate-600 leading-relaxed">
+            Reproduce la canción ahora y pide a la mesa que la adivine.
+          </p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <button
+          onClick={onCancel}
+          className="py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm rounded-xl transition"
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={onStart}
+          className="py-3.5 bg-brand-green hover:bg-brand-green-hover text-brand-navy font-extrabold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+        >
+          Continuar <i className="fa-solid fa-play" />
+        </button>
       </div>
+    </div>
+  )
+}
 
+function ResultButtons({ onAnswer }) {
+  return (
+    <div className="grid grid-cols-2 gap-3">
       <button
-        onClick={onCancel}
-        className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm rounded-xl transition"
+        onClick={() => onAnswer(true)}
+        className="py-5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black shadow-md transition active:scale-95"
       >
-        Cancelar
+        ✅ Superado (+5)
+      </button>
+      <button
+        onClick={() => onAnswer(false)}
+        className="py-5 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-black shadow-md transition active:scale-95"
+      >
+        ❌ No superado
       </button>
     </div>
   )
@@ -151,6 +142,39 @@ function PlayView({ current, onAnswer }) {
     )
   }
 
+  if (type === 'song') {
+    return (
+      <div className="space-y-6">
+        <ModalHeader
+          emoji="🎵"
+          title="Adivina la Canción"
+          subtitle="La canción se reproduce manualmente desde el equipo de audio"
+        />
+        <div className="text-center bg-gradient-to-br from-fuchsia-50 to-indigo-50 border-2 border-fuchsia-200 rounded-3xl p-6">
+          <div className="text-6xl mb-3 animate-float">🎵</div>
+          <p className="text-xl font-black text-brand-navy">Adivina la canción</p>
+        </div>
+        <p className="text-center text-sm text-slate-500">
+          Registra el resultado cuando la mesa termine de jugar:
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => onAnswer(true)}
+            className="py-5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black shadow-md transition active:scale-95"
+          >
+            ✅ Completado (+5)
+          </button>
+          <button
+            onClick={() => onAnswer(false)}
+            className="py-5 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-black shadow-md transition active:scale-95"
+          >
+            ❌ Equivocado
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   if (type === 'traditional') {
     return (
       <div className="space-y-6">
@@ -167,29 +191,16 @@ function PlayView({ current, onAnswer }) {
         <p className="text-center text-sm text-slate-500">
           Registra el resultado cuando la mesa termine de jugar:
         </p>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => onAnswer(true)}
-            className="py-5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black shadow-md transition active:scale-95"
-          >
-            ✅ ¡Lo superaron! (+5)
-          </button>
-          <button
-            onClick={() => onAnswer(false)}
-            className="py-5 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-black shadow-md transition active:scale-95"
-          >
-            ❌ No lo lograron
-          </button>
-        </div>
+        <ResultButtons onAnswer={onAnswer} />
       </div>
     )
   }
 
-  const title = type === 'song' ? 'Completar la Canción' : 'Refranes Venezolanos'
+  const title = 'Refranes Venezolanos'
 
   return (
     <div className="space-y-5">
-      <ModalHeader emoji={type === 'song' ? '🎵' : '📜'} title={title} />
+      <ModalHeader emoji="📜" title={title} />
       <p className="text-center text-lg font-bold text-brand-navy italic leading-snug">
         {data.fragment}
       </p>
@@ -214,6 +225,7 @@ function PlayView({ current, onAnswer }) {
 function ResultView({ current, result, onFinish }) {
   const success = result === 'correct'
   const { type, data } = current
+
   const answerText =
     type === 'truefalse'
       ? data.correct
@@ -221,8 +233,12 @@ function ResultView({ current, result, onFinish }) {
         : 'Falso'
       : type === 'traditional'
         ? `${data.emoji} ${data.name}`
-        : data.options[data.correct]
-  const answerLabel = type === 'traditional' ? 'Juego que le tocó' : 'Respuesta correcta'
+        : type === 'song'
+          ? 'Adivina la Canción'
+          : data.options[data.correct]
+
+  const answerLabel =
+    type === 'traditional' ? 'Juego que le tocó' : type === 'song' ? 'Reto que le tocó' : 'Respuesta correcta'
 
   return (
     <div className="space-y-5 text-center">
@@ -240,7 +256,7 @@ function ResultView({ current, result, onFinish }) {
 
       <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
         <p className="text-[11px] uppercase font-bold text-slate-400">{answerLabel}</p>
-        <p className="font-bold text-brand-navy text-lg">{answerText}</p>
+        <p className="font-bold text-brand-navy text-lg break-words">{answerText}</p>
       </div>
 
       <p className="text-sm text-slate-500">
@@ -263,22 +279,24 @@ export default function WildcardModal({
   phase,
   current,
   result,
-  onSelectGame,
+  onStart,
   onAnswer,
   onFinish,
   onCancel,
 }) {
   if (!phase || phase === 'idle') return null
 
-  const widthClass = phase === 'select' || phase === 'suspense' ? 'max-w-3xl' : 'max-w-xl'
+  const widthClass = phase === 'suspense' ? 'max-w-3xl' : 'max-w-xl'
 
   return (
     <div className="fixed inset-0 bg-brand-navy/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div
         className={`bg-white rounded-3xl w-full ${widthClass} p-6 sm:p-8 shadow-2xl border border-slate-200 max-h-[92vh] overflow-y-auto`}
       >
-        {phase === 'select' && <SelectView onSelect={onSelectGame} onCancel={onCancel} />}
         {phase === 'suspense' && <SuspenseView />}
+        {phase === 'ready' && current && (
+          <ReadyView current={current} onStart={onStart} onCancel={onCancel} />
+        )}
         {phase === 'play' && current && <PlayView current={current} onAnswer={onAnswer} />}
         {phase === 'result' && current && (
           <ResultView current={current} result={result} onFinish={onFinish} />

@@ -1,3 +1,4 @@
+import { useTables } from '../context/TablesContext.jsx'
 import { useSound } from '../hooks/useSound.js'
 import { useGameBroadcast } from '../lib/sync.js'
 import { useCapitalesGame } from '../games/capitales/hooks/useCapitalesGame.js'
@@ -6,25 +7,21 @@ import GameScreen from '../games/capitales/components/GameScreen.jsx'
 import ResultsScreen from '../games/capitales/components/ResultsScreen.jsx'
 
 export default function CapitalesPage() {
+  const { tables } = useTables()
   const { enabled, toggle, play } = useSound(true)
-  const game = useCapitalesGame(play)
+  const game = useCapitalesGame(tables, play)
 
   useGameBroadcast('incret-capitales-display', {
     ready: true,
     screen: game.screen,
-    mode: game.mode,
     stateName: game.currentState?.name ?? '',
     activeId: game.currentState?.id ?? null,
     currentIndex: game.currentIndex,
     total: game.total,
-    score: game.score,
-    streak: game.streak,
-    roundTimeLeft: game.roundTimeLeft,
-    roundTimerRunning: game.roundTimerRunning,
-    totalAttempts: game.totalAttempts,
-    elapsed: game.elapsed,
     answered: game.answered,
     feedback: game.feedback,
+    ranking: game.ranking,
+    leader: game.leader,
   })
 
   return (
@@ -54,36 +51,27 @@ export default function CapitalesPage() {
       </div>
 
       <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 py-8 flex flex-col justify-center items-center min-h-[72vh]">
-        {game.screen === 'start' && <StartScreen onStart={game.startGame} />}
+        {game.screen === 'start' && <StartScreen tables={tables} onStart={game.startGame} />}
 
         {game.screen === 'game' && (
           <GameScreen
             currentState={game.currentState}
-            mode={game.mode}
-            roundTimeLeft={game.roundTimeLeft}
-            roundTimerRunning={game.roundTimerRunning}
-            score={game.score}
-            streak={game.streak}
             currentIndex={game.currentIndex}
             total={game.total}
             feedback={game.feedback}
             answered={game.answered}
-            anim={game.anim}
-            onMarkCorrect={game.markCorrect}
-            onMarkIncorrect={game.markIncorrect}
+            tables={tables}
+            ranking={game.ranking}
+            onAward={game.awardTable}
+            onReveal={game.reveal}
             onNext={game.nextState}
-            onStartTimer={game.startRoundTimer}
-            onPauseTimer={game.pauseRoundTimer}
-            onResetTimer={game.resetRoundTimer}
           />
         )}
 
         {game.screen === 'results' && (
           <ResultsScreen
-            score={game.score}
-            total={game.total}
-            totalAttempts={game.totalAttempts}
-            elapsed={game.elapsed}
+            ranking={game.ranking}
+            leader={game.leader}
             onPlayAgain={game.showStartScreen}
           />
         )}

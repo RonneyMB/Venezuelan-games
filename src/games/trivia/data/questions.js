@@ -283,4 +283,160 @@ export const TRIVIA_QUESTIONS = [
     explanation:
       'Es la máxima expresión para resaltar que algo o alguien posee una identidad 100% venezolana.',
   },
+
+  // AMPLIACIÓN: HISTORIA DE VENEZUELA (+3)
+  {
+    category: 'Historia de Venezuela',
+    question: '¿Quién fue el primer Presidente de la República de Venezuela?',
+    options: ['José Antonio Páez', 'Simón Bolívar', 'Andrés Bello', 'Rafael Urdaneta'],
+    correct: 0,
+    explanation:
+      'José Antonio Páez fue el primer presidente de Venezuela, desde 1830.',
+  },
+  {
+    category: 'Historia de Venezuela',
+    question: '¿En qué año se sancionó la primera Constitución de Venezuela?',
+    options: ['1811', '1830', '1840', '1850'],
+    correct: 1,
+    explanation:
+      'La primera Constitución de Venezuela fue sancionada el 21 de noviembre de 1830.',
+  },
+  {
+    category: 'Historia de Venezuela',
+    question: '¿Sobre qué ciudad se construyó la Ciudad Bolívar?',
+    options: ['Angostura', 'Valencia', 'Cumaná', 'Barquisimeto'],
+    correct: 0,
+    explanation:
+      'La Ciudad Bolívar se construyó sobre Angostura, donde Bolívar resistió el asedio español en 1816.',
+  },
+
+  // AMPLIACIÓN: CULTURA GENERAL (+3)
+  {
+    category: 'Cultura General',
+    question: '¿Cuál es la capital del estado Zulia?',
+    options: ['Maracaibo', 'Cabimas', 'Mene Grande', 'Machiques'],
+    correct: 0,
+    explanation: 'Maracaibo es la capital del estado Zulia y la segunda ciudad más grande del país.',
+  },
+  {
+    category: 'Cultura General',
+    question: '¿Cuál es el río más largo de Venezuela?',
+    options: ['Orinoco', 'Caroni', 'Catatumbo', 'Caroní tributary'],
+    correct: 0,
+    explanation:
+      'El Orinoco es el río más largo de Venezuela y uno de los más importantes de Sudamérica.',
+  },
+  {
+    category: 'Cultura General',
+    question: '¿Cómo se llama la plaza más famosa de Caracas?',
+    options: ['Plaza Bolívar', 'Plaza Venezuela', 'Plaza San Martín', 'Plaza El Ángel'],
+    correct: 0,
+    explanation:
+      'La Plaza Bolívar es la plaza principal de Caracas y el corazón del centro histórico.',
+  },
+
+  // AMPLIACIÓN: COMIDA TÍPICA (+4)
+  {
+    category: 'Comida Típica',
+    question: '¿Cuál de estos platos es típico de la región zuliana?',
+    options: ['Pabellón criollo', 'Mandocas', 'Pasticho', 'Arroz con coco'],
+    correct: 1,
+    explanation:
+      'Las mandocas son un plato típico zuliano hecho con yuca, servidas con queso y manteca.',
+  },
+  {
+    category: 'Comida Típica',
+    question: '¿De qué grano se hace originalmente la arepa?',
+    options: ['Trigo', 'Maíz', 'Arroz', 'Yuca'],
+    correct: 1,
+    explanation: 'La arepa se hace originalmente con harina de maíz, no de trigo.',
+  },
+  {
+    category: 'Comida Típica',
+    question: '¿Cuál de estos es un dulce típico venezolano hecho con leche y canela?',
+    options: ['Cocada frita', 'Beignets', 'Churros', 'Praline'],
+    correct: 0,
+    explanation: 'La cocada frita es un dulce tradicional venezolano hecho con coco, leche y canela.',
+  },
+  {
+    category: 'Comida Típica',
+    question: '¿Con qué se acompaña típicamente el pabellón criollo?',
+    options: [
+      'Caraotas negras y arroz blanco',
+      'Plátano y carne mechada',
+      'Cambur con tostón',
+      'Pasta y pollo guisado',
+    ],
+    correct: 0,
+    explanation:
+      'El pabellón criollo se sirve con arroz blanco, caraotas negras, carne mechada y Cambur.',
+  },
+
+  // AMPLIACIÓN: DATOS CURIOSOS (+4)
+  {
+    category: 'Datos Curiosos',
+    question: '¿Cuántos estados tiene Venezuela actualmente?',
+    options: ['21', '23', '20', '25'],
+    correct: 1,
+    explanation: 'Venezuela cuenta actualmente con 23 estados y un Distrito Capital.',
+  },
+  {
+    category: 'Datos Curiosos',
+    question: '¿Cuál es la cascada más alta del mundo y se encuentra en Venezuela?',
+    options: ['Salto Ángel', 'Kaieteur', 'Angel Falls', 'Salto Grande'],
+    correct: 0,
+    explanation:
+      'El Salto Ángel, en el Canaima, mide unos 979 metros y es la cascada más alta del mundo.',
+  },
+  {
+    category: 'Datos Curiosos',
+    question: '¿Cuál es la moneda oficial de Venezuela?',
+    options: ['Bolívar', 'Dólar', 'Peso', 'Real'],
+    correct: 0,
+    explanation: 'La moneda oficial de Venezuela es el bolívar.',
+  },
+  {
+    category: 'Datos Curiosos',
+    question: '¿Cuál de estos parques nacionales está ubicado en el estado Yaracuy?',
+    options: ['Henri Pittier', 'Canaima', 'Serranía de la Macuira', 'Yacambú'],
+    correct: 0,
+    explanation:
+      'El Parque Nacional Henri Pittier se encuentra en los estados Aragua y Yaracuy.',
+  },
+
+  // AMPLIACIÓN: ADIVINANZAS Y DICHOS (+4)
+  {
+    category: 'Adivinanzas y Dichos',
+    question: "Adivinanza: 'Oro parece, plata no es'. ¿Qué es?",
+    options: ['El Sol', 'La Luna', 'El mar', 'El monte'],
+    correct: 0,
+    explanation: 'El tradicional adivinanza "oro parece, plata no es" se refiere al Sol.',
+  },
+  {
+    category: 'Adivinanzas y Dichos',
+    question: "Adivinanza: 'Redonda como una luna, brilla en el cielo, ilumina la noche'. ¿Qué es?",
+    options: ['La estrella polar', 'La Luna', 'El cometa', 'El faro'],
+    correct: 1,
+    explanation: 'La Luna es redonda y brilla en el cielo iluminando la noche.',
+  },
+  {
+    category: 'Adivinanzas y Dichos',
+    question: '¿Qué significa la expresión "no tener pelo en la lengua"?',
+    options: ['Ser muy sincero', 'Ser muy mentiroso', 'Hablar muy fuerte', 'Callarse siempre'],
+    correct: 0,
+    explanation: 'Significa ser sincero y hablar con verdad en todo momento.',
+  },
+  {
+    category: 'Adivinanzas y Dichos',
+    question: '¿Qué significa la expresión "ponerse las pilas"?',
+    options: [
+      'Quedarse muy arreglado y elegante para una ocasión especial',
+      'Esforzarse y ponerse a trabajar con ganas',
+      'Quedarse muy quieto',
+      'Salir corriendo',
+    ],
+    correct: 1,
+    explanation:
+      'Significa hacer el esfuerzo de trabajar o actuar con ganas y energía.',
+  },
 ]

@@ -15,7 +15,7 @@ export default function WinnerModal({ open, winner, tables, scores, onRestart })
         </div>
         <h3 className="text-2xl font-black text-brand-navy">¡Juego Finalizado!</h3>
         <p className="text-slate-500 font-bold my-1">
-          Campeona: <span className="text-brand-green">{winnerName}</span>
+          Líder general: <span className="text-brand-green">{winnerName}</span>
         </p>
 
         <div className="my-6 space-y-2 max-h-[40vh] overflow-y-auto">

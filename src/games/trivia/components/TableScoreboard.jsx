@@ -26,7 +26,7 @@ export default function TableScoreboard({ tables, scores, activeTable, onAdjust 
               </span>
             </div>
             <div className="mt-3 flex items-baseline justify-between">
-              <span className="text-xs text-slate-500 font-semibold">Puntos:</span>
+              <span className="text-xs text-slate-500 font-semibold">Acumulado:</span>
               <span className="text-3xl font-black text-brand-navy">{scores[table.id] ?? 0}</span>
             </div>
             <div className="mt-2 pt-2 border-t border-slate-100 flex justify-end gap-1">

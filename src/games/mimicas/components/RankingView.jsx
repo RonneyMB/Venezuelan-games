@@ -1,6 +1,6 @@
 export default function RankingView({ tables, ranking, champion, finished, onStartTurn }) {
   const total = tables.length
-  const played = ranking.filter((r) => r.score !== null).length
+  const played = ranking.filter((r) => r.played).length
 
   const startLabel = finished
     ? 'TORNEO FINALIZADO'
@@ -12,11 +12,11 @@ export default function RankingView({ tables, ranking, champion, finished, onSta
     if (finished && row.id === champion?.id) {
       return (
         <span className="px-2.5 py-1 bg-amber-400 text-amber-950 rounded-full text-xs font-black whitespace-nowrap">
-          🏆 Ganador
+          🏆 Líder
         </span>
       )
     }
-    if (row.score !== null) {
+    if (row.played) {
       return (
         <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-bold whitespace-nowrap">
           Jugado
@@ -35,12 +35,13 @@ export default function RankingView({ tables, ranking, champion, finished, onSta
       <div className="gradient-brand text-white p-6 rounded-2xl shadow-lg relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="z-10 space-y-2 text-center md:text-left">
           <span className="inline-block bg-brand-green/20 text-brand-green text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider border border-brand-green/30">
-            Torneo por Puntos
+            Marcador General
           </span>
           <h2 className="text-2xl md:text-3xl font-black">¡Desafío de Mímicas 360NET!</h2>
           <p className="text-slate-300 text-sm max-w-2xl">
             Cada mesa juega <strong>un turno de 7 minutos</strong> para adivinar la mayor cantidad
-            posible de venezolanismos, comidas, tradiciones y lugares. Gana la mesa con más aciertos.
+            posible de venezolanismos. Cada acierto suma al <strong>marcador general</strong> que se
+            acumula entre todos los juegos.
           </p>
           <p className="text-slate-400 text-xs">
             {played} de {total} {total === 1 ? 'mesa ha jugado' : 'mesas han jugado'}
@@ -61,7 +62,7 @@ export default function RankingView({ tables, ranking, champion, finished, onSta
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
         <h3 className="text-lg font-bold text-brand-navy mb-4 flex items-center gap-2">
           <i className="fa-solid fa-ranking-star text-brand-green" />
-          <span>Tabla de Posiciones</span>
+          <span>Tabla de Posiciones (Acumulado)</span>
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -69,7 +70,7 @@ export default function RankingView({ tables, ranking, champion, finished, onSta
               <tr className="bg-slate-50 text-slate-500 text-xs uppercase font-extrabold border-b border-slate-200">
                 <th className="p-3 w-16">Pos.</th>
                 <th className="p-3">Mesa</th>
-                <th className="p-3">Aciertos (7 min)</th>
+                <th className="p-3">Puntos</th>
                 <th className="p-3">Estatus</th>
               </tr>
             </thead>
@@ -91,11 +92,7 @@ export default function RankingView({ tables, ranking, champion, finished, onSta
                     </span>
                   </td>
                   <td className="p-3">
-                    {row.score !== null ? (
-                      <span className="font-bold text-brand-navy">{row.score} pts</span>
-                    ) : (
-                      <span className="text-slate-300">--</span>
-                    )}
+                    <span className="font-bold text-brand-navy">{row.score} pts</span>
                   </td>
                   <td className="p-3">{statusBadge(row)}</td>
                 </tr>

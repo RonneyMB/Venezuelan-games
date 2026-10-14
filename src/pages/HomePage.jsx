@@ -1,5 +1,75 @@
 import GameCard from '../components/GameCard.jsx'
 import TablesPanel from '../components/TablesPanel.jsx'
+import { useTables } from '../context/TablesContext.jsx'
+import { useGlobalScore } from '../context/GlobalScoreContext.jsx'
+
+const MEDALS = ['🥇', '🥈', '🥉']
+
+function GlobalScorePanel() {
+  const { tables } = useTables()
+  const { totals, resetAll } = useGlobalScore()
+
+  const ranking = tables
+    .map((t) => ({ id: t.id, name: t.name, score: totals[t.id] ?? 0 }))
+    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
+
+  const hasPoints = ranking.some((r) => r.score > 0)
+
+  const onReset = () => {
+    if (
+      window.confirm(
+        '¿Reiniciar el MARCADOR GENERAL de todas las mesas? Todos los puntos acumulados se pondrán a cero.',
+      )
+    ) {
+      resetAll()
+    }
+  }
+
+  return (
+    <section className="bg-white rounded-3xl border-2 border-slate-200 shadow-sm p-6 sm:p-7">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <div>
+          <h2 className="text-xl font-black text-brand-navy flex items-center gap-2">
+            <i className="fa-solid fa-trophy text-amber-400" />
+            Marcador General
+            <span className="text-[11px] font-bold text-brand-navy bg-amber-400/20 border border-amber-400/40 rounded-full px-2.5 py-0.5">
+              Acumulado
+            </span>
+          </h2>
+          <p className="text-xs text-slate-500 mt-1">
+            Puntos acumulados por mesa entre todos los juegos. Se suman en vivo.
+          </p>
+        </div>
+        <button
+          onClick={onReset}
+          disabled={!hasPoints}
+          className="text-xs font-semibold px-3 py-2 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 transition flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <i className="fa-solid fa-rotate-left" /> Reiniciar marcador general
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {ranking.map((r, i) => (
+          <div
+            key={r.id}
+            className={`rounded-2xl border-2 px-4 py-3 flex items-center justify-between gap-2 ${
+              i === 0 && r.score > 0
+                ? 'border-amber-300 bg-amber-50'
+                : 'border-slate-200 bg-slate-50'
+            }`}
+          >
+            <span className="flex items-center gap-2 min-w-0">
+              <span className="text-base shrink-0">{MEDALS[i] ?? `#${i + 1}`}</span>
+              <span className="font-bold text-brand-navy text-sm truncate">{r.name}</span>
+            </span>
+            <span className="font-black text-brand-navy text-lg shrink-0">{r.score}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
 
 export default function HomePage() {
   return (
@@ -13,13 +83,17 @@ export default function HomePage() {
             Elige tu <span className="text-brand-green">desafío</span> venezolano
           </h1>
           <p className="mt-4 text-slate-600 text-base sm:text-lg">
-            Cuatro juegos interactivos: trivia por mesas, torneo de mímicas, geografía de Venezuela
-            y un mini-torneo de juegos tradicionales. Selecciona uno para comenzar.
+            Cuatro juegos interactivos que suman a un <strong>marcador general</strong> compartido:
+            trivia por mesas, torneo de mímicas, capitales de Venezuela y torneo de perinola.
           </p>
         </div>
 
-        <div className="mb-10">
+        <div className="mb-8">
           <TablesPanel />
+        </div>
+
+        <div className="mb-10">
+          <GlobalScorePanel />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -44,16 +118,16 @@ export default function HomePage() {
             emoji="🗺️"
             accent="amber"
             title="Capitales de Venezuela"
-            description="Observa el estado resaltado en el mapa e ingresa el nombre de su capital. Modos de práctica libre o contrarreloj de 3 minutos."
-            meta={['24 estados', 'Práctica / Contrarreloj', 'Mapa SVG']}
+            description="Observa el estado resaltado en el mapa. La mesa más rápida responde y el administrador le suma puntos al marcador general."
+            meta={['24 estados', 'Por mesas', '+10 manual']}
           />
           <GameCard
             to="/tradicional"
             emoji="🪀"
             accent="blue"
-            title="Juegos Tradicionales"
-            description="Mini-torneo donde las mesas se enfrentan al azar, todas contra todas a 2 vueltas, en juegos tradicionales. Gana la mesa con más puntos."
-            meta={['Todos vs Todos', '2 vueltas', 'La Perinola']}
+            title="Torneo de Perinola"
+            description="Torneo donde las mesas se enfrentan todas contra todas a 2 vueltas en partidas de Perinola, con marcador en vivo y puntaje manual. Gana la mesa con más puntos."
+            meta={['Todos vs Todos', '2 vueltas', 'Marcador en vivo']}
           />
         </div>
 
